@@ -3,6 +3,9 @@ use elrond_wasm_debug::{rust_biguint, testing_framework::*, tx_mock::TxResult, D
 use public_sale_mint::{whitelist::WhitelistModule, *};
 
 pub const WASM_PATH: &'static str = "output/empty.wasm";
+pub const PUBLIC_TIMESTAMP: u64 = 120;
+pub const SECOND_WHITELIST_TIMESTAMP_DELTA: u64 = 30;
+pub const FIRST_WHITELIST_TIMESTAMP_DELTA: u64 = 60;
 
 pub struct ContractSetup<ContractObjBuilder>
 where
@@ -13,6 +16,9 @@ where
     pub users: [Address; 4],
     pub contract_wrapper:
         ContractObjWrapper<public_sale_mint::ContractObj<DebugApi>, ContractObjBuilder>,
+    pub public_timestamp: u64,
+    pub first_whitelist_timestamp: u64,
+    pub second_whitelist_timestamp: u64,
 }
 
 impl<ContractObjBuilder> ContractSetup<ContractObjBuilder>
@@ -130,9 +136,9 @@ where
                 5,
                 ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64, 5u64]),
                 ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64, 5u64]),
-                0,
-                0,
-                0,
+                PUBLIC_TIMESTAMP,
+                SECOND_WHITELIST_TIMESTAMP_DELTA,
+                FIRST_WHITELIST_TIMESTAMP_DELTA,
                 TokenIdentifier::from_esdt_bytes(b"TOKEN"),
                 3,
             );
@@ -146,5 +152,8 @@ where
         owner_address: owner_address,
         contract_wrapper: cf_wrapper,
         users,
+        public_timestamp: PUBLIC_TIMESTAMP,
+        first_whitelist_timestamp: PUBLIC_TIMESTAMP - FIRST_WHITELIST_TIMESTAMP_DELTA,
+        second_whitelist_timestamp: PUBLIC_TIMESTAMP - SECOND_WHITELIST_TIMESTAMP_DELTA,
     }
 }

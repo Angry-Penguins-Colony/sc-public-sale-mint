@@ -5,6 +5,11 @@ pub const ERR_NOT_OWNER: &str = "Endpoint can only be called by owner";
 
 #[elrond_wasm::module]
 pub trait WhitelistModule {
+    #[endpoint]
+    fn has_access(&self, address: ManagedAddress) -> bool {
+        panic!("Not implemented yet")
+    }
+
     // ===
     // FIRST WHITELIST
     #[endpoint]
