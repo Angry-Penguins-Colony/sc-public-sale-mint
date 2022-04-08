@@ -1,0 +1,1 @@
+cargo test --package public-sale-mint --test *_tests
