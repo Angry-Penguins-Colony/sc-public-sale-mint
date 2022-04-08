@@ -1,4 +1,7 @@
-use elrond_wasm::types::{Address, ManagedAddress, ManagedVec, TokenIdentifier};
+use elrond_wasm::{
+    contract_base::ContractBase,
+    types::{Address, ManagedAddress, ManagedVec, TokenIdentifier},
+};
 use elrond_wasm_debug::{rust_biguint, testing_framework::*, tx_mock::TxResult, DebugApi};
 use public_sale_mint::{whitelist::WhitelistModule, *};
 
@@ -6,6 +9,8 @@ pub const WASM_PATH: &'static str = "output/empty.wasm";
 pub const PUBLIC_TIMESTAMP: u64 = 120;
 pub const SECOND_WHITELIST_TIMESTAMP_DELTA: u64 = 20;
 pub const FIRST_WHITELIST_TIMESTAMP_DELTA: u64 = 40;
+pub const EGG_ID: [u8; 3] = *b"EGG";
+pub const EGG_NONCE: u64 = 1;
 
 pub struct ContractSetup<ContractObjBuilder>
 where
@@ -19,6 +24,8 @@ where
     pub public_timestamp: u64,
     pub first_whitelist_timestamp: u64,
     pub second_whitelist_timestamp: u64,
+    pub egg_id: [u8; 3],
+    pub egg_nonce: u64,
 }
 
 impl<ContractObjBuilder> ContractSetup<ContractObjBuilder>
@@ -124,6 +131,33 @@ where
     }
 
     #[allow(dead_code)]
+    pub fn set_eggs(&mut self, address: &Address, balance: u64) {
+        self.blockchain_wrapper.set_nft_balance(
+            address,
+            &self.egg_id,
+            self.egg_nonce,
+            &rust_biguint!(balance),
+            &{},
+        )
+    }
+
+    #[allow(dead_code)]
+    pub fn fill_eggs_from(&mut self, address: &Address, balance_to_send: u64) -> TxResult {
+        return self.blockchain_wrapper.execute_esdt_transfer(
+            address,
+            &self.contract_wrapper,
+            &self.egg_id,
+            self.egg_nonce,
+            &rust_biguint!(balance_to_send),
+            |sc| {
+                let payment = sc.call_value().payment_as_tuple();
+
+                sc.fill_egg(payment.2, payment.0, payment.1);
+            },
+        );
+    }
+
+    #[allow(dead_code)]
     pub fn has_access(&mut self, address: &Address) -> bool {
         let mut output = Option::None;
         self.blockchain_wrapper
@@ -186,5 +220,7 @@ where
         public_timestamp: PUBLIC_TIMESTAMP,
         first_whitelist_timestamp: PUBLIC_TIMESTAMP - FIRST_WHITELIST_TIMESTAMP_DELTA,
         second_whitelist_timestamp: PUBLIC_TIMESTAMP - SECOND_WHITELIST_TIMESTAMP_DELTA,
+        egg_id: EGG_ID,
+        egg_nonce: EGG_NONCE,
     }
 }

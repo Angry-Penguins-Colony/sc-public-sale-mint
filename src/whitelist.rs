@@ -38,12 +38,14 @@ pub trait WhitelistModule {
     // ===
     // FIRST WHITELIST
     #[endpoint]
+    #[only_owner]
     fn add_to_first_whitelist(&self, item: &ManagedAddress) {
         self.blockchain().check_caller_is_owner();
         self.first_whitelist_mapper().add(item);
     }
 
     #[endpoint]
+    #[only_owner]
     fn remove_from_first_whitelist(&self, item: &ManagedAddress) {
         self.blockchain().check_caller_is_owner();
         self.first_whitelist_mapper().remove(item);
@@ -65,12 +67,14 @@ pub trait WhitelistModule {
     // ===
     // SECOND WHITELIST
     #[endpoint]
+    #[only_owner]
     fn add_to_second_whitelist(&self, item: &ManagedAddress) {
         self.blockchain().check_caller_is_owner();
         self.second_whitelist_mapper().add(item);
     }
 
     #[endpoint]
+    #[only_owner]
     fn remove_from_second_whitelist(&self, item: &ManagedAddress) {
         self.blockchain().check_caller_is_owner();
         self.second_whitelist_mapper().remove(item);

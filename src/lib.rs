@@ -81,4 +81,16 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         self.token_identifier().set(token);
         self.token_nonce().set(token_nonce);
     }
+
+    #[endpoint]
+    #[payable("*")]
+    #[only_owner]
+    fn fill_egg(
+        &self,
+        #[payment] payment: BigUint,
+        #[payment_token] token: TokenIdentifier,
+        #[payment_nonce] nonce: u64,
+    ) {
+        self.blockchain().check_caller_is_owner();
+    }
 }
