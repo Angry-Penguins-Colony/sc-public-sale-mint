@@ -1,4 +1,4 @@
-use elrond_wasm::types::ManagedVec;
+use elrond_wasm::types::{ManagedVec, TokenIdentifier};
 use elrond_wasm_debug::{
     testing_framework::BlockchainStateWrapper,
     tx_mock::{TxContextRef, TxResult},
@@ -10,15 +10,33 @@ mod contract_setup;
 fn init() {
     warmup_init(|sc| {
         sc.init(
-            5,
-            ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64]),
-            ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64]),
+            3,
+            ManagedVec::from(vec![1u64, 5u64, 10u64]),
+            ManagedVec::from(vec![1u64, 4u64, 9u64]),
             50,
             10,
             10,
+            TokenIdentifier::from_esdt_bytes(b"TOKEN"),
+            3,
         );
 
-        panic!("Assert eq values of sc");
+        assert_eq!(sc.max_per_wallet().get(), 3);
+        assert_eq!(sc.price_per_egg().len(), 3);
+        assert_eq!(sc.price_per_egg().get(1), 1u64);
+        assert_eq!(sc.price_per_egg().get(2), 5u64);
+        assert_eq!(sc.price_per_egg().get(3), 10u64);
+        assert_eq!(sc.reduced_price_per_egg().len(), 3);
+        assert_eq!(sc.reduced_price_per_egg().get(1), 1u64);
+        assert_eq!(sc.reduced_price_per_egg().get(2), 4u64);
+        assert_eq!(sc.reduced_price_per_egg().get(3), 9u64);
+        assert_eq!(sc.timestamp_public_sale().get(), 50);
+        assert_eq!(sc.timestamp_second_whitelist().get(), 40);
+        assert_eq!(sc.timestamp_first_whitelist().get(), 30);
+        assert_eq!(
+            sc.token_identifier().get(),
+            TokenIdentifier::from_esdt_bytes(b"TOKEN")
+        );
+        assert_eq!(sc.token_nonce().get(), 3);
     })
     .assert_ok();
 }
@@ -33,6 +51,8 @@ fn full_prices_length_different_from_max_per_wallet() {
             0,
             0,
             0,
+            TokenIdentifier::from_esdt_bytes(b"TOKEN"),
+            3,
         );
     })
     .assert_user_error(public_sale_mint::ERR_INIT_PRICE_PER_EGG_DIFF);
@@ -48,6 +68,8 @@ fn reduced_prices_length_different_from_max_per_wallet() {
             0,
             0,
             0,
+            TokenIdentifier::from_esdt_bytes(b"TOKEN"),
+            3,
         );
     })
     .assert_user_error(public_sale_mint::ERR_INIT_REDUCED_PRICE_PER_EGG_DIFF);
@@ -63,6 +85,8 @@ fn full_price_equals_0() {
             0,
             0,
             0,
+            TokenIdentifier::from_esdt_bytes(b"TOKEN"),
+            3,
         );
     })
     .assert_user_error(public_sale_mint::ERR_INIT_PRICE_PER_EGG_ZERO);
@@ -78,6 +102,8 @@ fn reduced_price_equals_0() {
             0,
             0,
             0,
+            TokenIdentifier::from_esdt_bytes(b"TOKEN"),
+            3,
         );
     })
     .assert_user_error(public_sale_mint::ERR_INIT_REDUCED_PRICE_PER_EGG_ZERO);
