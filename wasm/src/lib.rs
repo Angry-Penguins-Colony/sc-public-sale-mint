@@ -5,7 +5,7 @@
 #![no_std]
 
 elrond_wasm_node::wasm_endpoints! {
-    empty
+    public_sale_mint
     (
     )
 }
