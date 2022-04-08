@@ -134,3 +134,45 @@ fn remove_from_second_whitelist() {
     setup.remove_from_second_whitelist(user.clone()).assert_ok();
     assert_eq!(setup.is_second_whitelisted(user.clone()), false);
 }
+
+#[test]
+fn remove_first_whitelist_while_not_owner() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    let address = &setup.users[0].clone();
+
+    setup.add_to_first_whitelist(address.clone()).assert_ok();
+
+    setup
+        .blockchain_wrapper
+        .execute_tx(
+            address,
+            &setup.contract_wrapper,
+            &rust_biguint!(0u64),
+            |sc| {
+                sc.remove_from_first_whitelist(ManagedAddress::from_address(&address));
+            },
+        )
+        .assert_user_error(public_sale_mint::whitelist::ERR_NOT_OWNER);
+}
+
+#[test]
+fn remove_second_whitelist_while_not_owner() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    let address = &setup.users[0].clone();
+
+    setup.add_to_second_whitelist(address.clone()).assert_ok();
+
+    setup
+        .blockchain_wrapper
+        .execute_tx(
+            address,
+            &setup.contract_wrapper,
+            &rust_biguint!(0u64),
+            |sc| {
+                sc.remove_from_second_whitelist(ManagedAddress::from_address(&address));
+            },
+        )
+        .assert_user_error(public_sale_mint::whitelist::ERR_NOT_OWNER);
+}
