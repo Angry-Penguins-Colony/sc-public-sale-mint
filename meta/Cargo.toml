@@ -1,0 +1,14 @@
+[package]
+name = "public-sale-mint-meta"
+version = "0.0.0"
+edition = "2018"
+publish = false
+authors = [ "you",]
+
+[dev-dependencies]
+
+[dependencies.public-sale-mint]
+path = ".."
+
+[dependencies.elrond-wasm-debug]
+version = "0.30.0"
