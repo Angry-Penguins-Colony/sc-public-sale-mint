@@ -3,7 +3,7 @@ use elrond_wasm_debug::{
     testing_framework::BlockchainStateWrapper,
     tx_mock::{TxContextRef, TxResult},
 };
-use public_sale_mint::PublicSaleMint;
+use public_sale_mint::{whitelist::WhitelistModule, PublicSaleMint};
 mod contract_setup;
 
 #[test]
@@ -15,7 +15,7 @@ fn init() {
             ManagedVec::from(vec![1u64, 4u64, 9u64]),
             50,
             10,
-            10,
+            20,
             TokenIdentifier::from_esdt_bytes(b"TOKEN"),
             3,
         );
@@ -39,6 +39,23 @@ fn init() {
         assert_eq!(sc.token_nonce().get(), 3);
     })
     .assert_ok();
+}
+
+#[test]
+fn init_second_wl_lesser_then_first() {
+    warmup_init(|sc| {
+        sc.init(
+            5,
+            ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64, 5u64]),
+            ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64, 5u64]),
+            0,
+            5,
+            0,
+            TokenIdentifier::from_esdt_bytes(b"TOKEN"),
+            3,
+        );
+    })
+    .assert_user_error(public_sale_mint::ERR_INIT_SECOND_WL_LESSER_THEN_FIRST);
 }
 
 #[test]

@@ -32,7 +32,7 @@ where
             &self.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                sc.add_to_first_whitelist(ManagedAddress::from_address(&address));
+                sc.add_to_first_whitelist(&ManagedAddress::from_address(&address));
             },
         );
 
@@ -44,7 +44,7 @@ where
         let mut output = Option::None;
         self.blockchain_wrapper
             .execute_query(&self.contract_wrapper, |sc| {
-                output = Some(sc.check_contains_first(ManagedAddress::from_address(&address)));
+                output = Some(sc.check_contains_first(&ManagedAddress::from_address(&address)));
             })
             .assert_ok();
 
@@ -56,7 +56,7 @@ where
         let mut output = Option::None;
         self.blockchain_wrapper
             .execute_query(&self.contract_wrapper, |sc| {
-                output = Some(sc.check_contains_second(ManagedAddress::from_address(&address)));
+                output = Some(sc.check_contains_second(&ManagedAddress::from_address(&address)));
             })
             .assert_ok();
 
@@ -70,7 +70,7 @@ where
             &self.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                sc.add_to_second_whitelist(ManagedAddress::from_address(&address));
+                sc.add_to_second_whitelist(&ManagedAddress::from_address(&address));
             },
         );
 
@@ -84,7 +84,7 @@ where
             &self.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                sc.remove_from_first_whitelist(ManagedAddress::from_address(&address));
+                sc.remove_from_first_whitelist(&ManagedAddress::from_address(&address));
             },
         );
 
@@ -98,11 +98,41 @@ where
             &self.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                sc.remove_from_second_whitelist(ManagedAddress::from_address(&address));
+                sc.remove_from_second_whitelist(&ManagedAddress::from_address(&address));
             },
         );
 
         return tx_result;
+    }
+
+    #[allow(dead_code)]
+    pub fn open_first_whitelist(&mut self) {
+        self.blockchain_wrapper
+            .set_block_timestamp(self.first_whitelist_timestamp);
+    }
+
+    #[allow(dead_code)]
+    pub fn open_second_whitelist(&mut self) {
+        self.blockchain_wrapper
+            .set_block_timestamp(self.second_whitelist_timestamp);
+    }
+
+    #[allow(dead_code)]
+    pub fn open_public_sale(&mut self) {
+        self.blockchain_wrapper
+            .set_block_timestamp(self.public_timestamp);
+    }
+
+    #[allow(dead_code)]
+    pub fn has_access(&mut self, address: &Address) -> bool {
+        let mut output = Option::None;
+        self.blockchain_wrapper
+            .execute_query(&self.contract_wrapper, |sc| {
+                output = Some(sc.has_access(ManagedAddress::from_address(&address)));
+            })
+            .assert_ok();
+
+        return output.unwrap();
     }
 }
 

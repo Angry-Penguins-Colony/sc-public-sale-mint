@@ -7,6 +7,8 @@ pub const ERR_INIT_PRICE_PER_EGG_ZERO: &str = "The price list is empty";
 pub const ERR_INIT_REDUCED_PRICE_PER_EGG_DIFF: &str =
     "Reduced rice per egg length different from max per wallet";
 pub const ERR_INIT_REDUCED_PRICE_PER_EGG_ZERO: &str = "The reduced price list is empty";
+pub const ERR_INIT_SECOND_WL_LESSER_THEN_FIRST: &str =
+    "The second whitelist must be lesser than the first";
 
 pub mod whitelist;
 
@@ -20,15 +22,6 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
 
     #[storage_mapper("reduced_price_per_egg")]
     fn reduced_price_per_egg(&self) -> VecMapper<u64>;
-
-    #[storage_mapper("timestamp_public_sale")]
-    fn timestamp_public_sale(&self) -> SingleValueMapper<u64>;
-
-    #[storage_mapper("timestamp_second_whitelist")]
-    fn timestamp_second_whitelist(&self) -> SingleValueMapper<u64>;
-
-    #[storage_mapper("timestamp_first_whitelist")]
-    fn timestamp_first_whitelist(&self) -> SingleValueMapper<u64>;
 
     #[storage_mapper("token_identifier")]
     fn token_identifier(&self) -> SingleValueMapper<TokenIdentifier>;
@@ -65,6 +58,11 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
             ERR_INIT_REDUCED_PRICE_PER_EGG_DIFF
         );
 
+        require!(
+            second_whitelist_delta < first_whitelist_delta,
+            ERR_INIT_SECOND_WL_LESSER_THEN_FIRST
+        );
+
         self.max_per_wallet().set(max_per_wallet);
 
         for price in price_per_egg.iter() {
@@ -79,7 +77,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         self.timestamp_second_whitelist()
             .set(timestamp_public_sale - second_whitelist_delta);
         self.timestamp_first_whitelist()
-            .set(timestamp_public_sale - second_whitelist_delta - first_whitelist_delta);
+            .set(timestamp_public_sale - first_whitelist_delta);
         self.token_identifier().set(token);
         self.token_nonce().set(token_nonce);
     }

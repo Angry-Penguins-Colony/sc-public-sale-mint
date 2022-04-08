@@ -15,7 +15,7 @@ fn add_to_first_whitelisted() {
     setup
         .blockchain_wrapper
         .execute_tx(&user, &setup.contract_wrapper, &rust_biguint!(0u64), |sc| {
-            let contains = sc.check_contains_first(ManagedAddress::from_address(&user));
+            let contains = sc.check_contains_first(&ManagedAddress::from_address(&user));
             assert_eq!(contains, true);
         })
         .assert_ok();
@@ -31,7 +31,7 @@ fn add_to_second_whitelisted() {
     setup
         .blockchain_wrapper
         .execute_tx(&user, &setup.contract_wrapper, &rust_biguint!(0u64), |sc| {
-            let contains = sc.check_contains_second(ManagedAddress::from_address(&user));
+            let contains = sc.check_contains_second(&ManagedAddress::from_address(&user));
             assert_eq!(contains, true);
         })
         .assert_ok();
@@ -50,7 +50,7 @@ fn normal_user_adding_to_first_wl() {
             &setup.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                sc.add_to_first_whitelist(ManagedAddress::from_address(&address));
+                sc.add_to_first_whitelist(&ManagedAddress::from_address(&address));
             },
         )
         .assert_user_error(public_sale_mint::whitelist::ERR_NOT_OWNER);
@@ -69,7 +69,7 @@ fn normal_user_adding_to_second_wl() {
             &setup.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                sc.add_to_second_whitelist(ManagedAddress::from_address(&address));
+                sc.add_to_second_whitelist(&ManagedAddress::from_address(&address));
             },
         )
         .assert_user_error(public_sale_mint::whitelist::ERR_NOT_OWNER);
@@ -88,7 +88,7 @@ fn check_contains_first_on_not_whitelisted() {
             &setup.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                let contains = sc.check_contains_first(ManagedAddress::from_address(&address));
+                let contains = sc.check_contains_first(&ManagedAddress::from_address(&address));
                 assert_eq!(contains, false);
             },
         )
@@ -108,7 +108,7 @@ fn check_contains_second_on_not_whitelisted() {
             &setup.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                let contains = sc.check_contains_second(ManagedAddress::from_address(&address));
+                let contains = sc.check_contains_second(&ManagedAddress::from_address(&address));
                 assert_eq!(contains, false);
             },
         )
@@ -150,7 +150,7 @@ fn remove_first_whitelist_while_not_owner() {
             &setup.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                sc.remove_from_first_whitelist(ManagedAddress::from_address(&address));
+                sc.remove_from_first_whitelist(&ManagedAddress::from_address(&address));
             },
         )
         .assert_user_error(public_sale_mint::whitelist::ERR_NOT_OWNER);
@@ -171,8 +171,98 @@ fn remove_second_whitelist_while_not_owner() {
             &setup.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                sc.remove_from_second_whitelist(ManagedAddress::from_address(&address));
+                sc.remove_from_second_whitelist(&ManagedAddress::from_address(&address));
             },
         )
         .assert_user_error(public_sale_mint::whitelist::ERR_NOT_OWNER);
+}
+
+#[test]
+fn has_access_in_public_open() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    let unwhitelisted = setup.users[0].clone();
+    let second_whitelisted = setup.users[1].clone();
+    let first_whitelisted = setup.users[2].clone();
+
+    setup
+        .add_to_second_whitelist(second_whitelisted.clone())
+        .assert_ok();
+
+    setup
+        .add_to_first_whitelist(first_whitelisted.clone())
+        .assert_ok();
+
+    setup.open_public_sale();
+
+    assert_eq!(setup.has_access(&unwhitelisted), true);
+    assert_eq!(setup.has_access(&second_whitelisted), true);
+    assert_eq!(setup.has_access(&first_whitelisted), true);
+}
+
+#[test]
+fn has_access_in_second_whitelisted_open() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    let unwhitelisted = setup.users[0].clone();
+    let second_whitelisted = setup.users[1].clone();
+    let first_whitelisted = setup.users[2].clone();
+
+    setup
+        .add_to_second_whitelist(second_whitelisted.clone())
+        .assert_ok();
+
+    setup
+        .add_to_first_whitelist(first_whitelisted.clone())
+        .assert_ok();
+
+    setup.open_second_whitelist();
+
+    assert_eq!(setup.has_access(&unwhitelisted), false);
+    assert_eq!(setup.has_access(&second_whitelisted), true);
+    assert_eq!(setup.has_access(&first_whitelisted), true);
+}
+
+#[test]
+fn has_access_in_first_whitelisted_open() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    let unwhitelisted = setup.users[0].clone();
+    let second_whitelisted = setup.users[1].clone();
+    let first_whitelisted = setup.users[2].clone();
+
+    setup
+        .add_to_second_whitelist(second_whitelisted.clone())
+        .assert_ok();
+
+    setup
+        .add_to_first_whitelist(first_whitelisted.clone())
+        .assert_ok();
+
+    setup.open_first_whitelist();
+
+    assert_eq!(setup.has_access(&unwhitelisted), false);
+    assert_eq!(setup.has_access(&second_whitelisted), false);
+    assert_eq!(setup.has_access(&first_whitelisted), true);
+}
+
+#[test]
+fn has_access_in_no_whitelisted_open() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    let unwhitelisted = setup.users[0].clone();
+    let second_whitelisted = setup.users[1].clone();
+    let first_whitelisted = setup.users[2].clone();
+
+    setup
+        .add_to_second_whitelist(second_whitelisted.clone())
+        .assert_ok();
+
+    setup
+        .add_to_first_whitelist(first_whitelisted.clone())
+        .assert_ok();
+
+    assert_eq!(setup.has_access(&unwhitelisted), false);
+    assert_eq!(setup.has_access(&second_whitelisted), false);
+    assert_eq!(setup.has_access(&first_whitelisted), false);
 }
