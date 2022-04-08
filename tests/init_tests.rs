@@ -17,6 +17,8 @@ fn init() {
             10,
             10,
         );
+
+        panic!("Assert eq values of sc");
     })
     .assert_ok();
 }
@@ -33,7 +35,52 @@ fn full_prices_length_different_from_max_per_wallet() {
             0,
         );
     })
-    .assert_user_error("Price per egg length different from max per wallet");
+    .assert_user_error(public_sale_mint::ERR_INIT_PRICE_PER_EGG_DIFF);
+}
+
+#[test]
+fn reduced_prices_length_different_from_max_per_wallet() {
+    warmup_init(|sc| {
+        sc.init(
+            5,
+            ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64, 5u64]),
+            ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64]),
+            0,
+            0,
+            0,
+        );
+    })
+    .assert_user_error(public_sale_mint::ERR_INIT_REDUCED_PRICE_PER_EGG_DIFF);
+}
+
+#[test]
+fn full_price_equals_0() {
+    warmup_init(|sc| {
+        sc.init(
+            5,
+            ManagedVec::new(),
+            ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64, 5u64]),
+            0,
+            0,
+            0,
+        );
+    })
+    .assert_user_error(public_sale_mint::ERR_INIT_PRICE_PER_EGG_ZERO);
+}
+
+#[test]
+fn reduced_price_equals_0() {
+    warmup_init(|sc| {
+        sc.init(
+            5,
+            ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64]),
+            ManagedVec::new(),
+            0,
+            0,
+            0,
+        );
+    })
+    .assert_user_error(public_sale_mint::ERR_INIT_REDUCED_PRICE_PER_EGG_ZERO);
 }
 
 pub fn warmup_init(tx_fn: fn(public_sale_mint::ContractObj<TxContextRef>)) -> TxResult {
