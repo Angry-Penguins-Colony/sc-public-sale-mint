@@ -46,6 +46,18 @@ where
     }
 
     #[allow(dead_code)]
+    pub fn is_second_whitelisted(&mut self, address: Address) -> bool {
+        let mut output = Option::None;
+        self.blockchain_wrapper
+            .execute_query(&self.contract_wrapper, |sc| {
+                output = Some(sc.check_contains_second(ManagedAddress::from_address(&address)));
+            })
+            .assert_ok();
+
+        return output.unwrap();
+    }
+
+    #[allow(dead_code)]
     pub fn add_to_second_whitelist(&mut self, address: Address) -> TxResult {
         let tx_result = self.blockchain_wrapper.execute_tx(
             &self.owner_address,
@@ -53,6 +65,34 @@ where
             &rust_biguint!(0u64),
             |sc| {
                 sc.add_to_second_whitelist(ManagedAddress::from_address(&address));
+            },
+        );
+
+        return tx_result;
+    }
+
+    #[allow(dead_code)]
+    pub fn remove_from_first_whitelist(&mut self, address: Address) -> TxResult {
+        let tx_result = self.blockchain_wrapper.execute_tx(
+            &self.owner_address,
+            &self.contract_wrapper,
+            &rust_biguint!(0u64),
+            |sc| {
+                sc.remove_from_first_whitelist(ManagedAddress::from_address(&address));
+            },
+        );
+
+        return tx_result;
+    }
+
+    #[allow(dead_code)]
+    pub fn remove_from_second_whitelist(&mut self, address: Address) -> TxResult {
+        let tx_result = self.blockchain_wrapper.execute_tx(
+            &self.owner_address,
+            &self.contract_wrapper,
+            &rust_biguint!(0u64),
+            |sc| {
+                sc.remove_from_second_whitelist(ManagedAddress::from_address(&address));
             },
         );
 

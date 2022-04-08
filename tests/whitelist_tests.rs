@@ -114,3 +114,23 @@ fn check_contains_second_on_not_whitelisted() {
         )
         .assert_ok();
 }
+
+#[test]
+fn remove_first_whitelist() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    let user = setup.users[0].clone();
+    setup.add_to_first_whitelist(user.clone()).assert_ok();
+    setup.remove_from_first_whitelist(user.clone()).assert_ok();
+    assert_eq!(setup.is_first_whitelisted(user.clone()), false);
+}
+
+#[test]
+fn remove_from_second_whitelist() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    let user = setup.users[0].clone();
+    setup.add_to_second_whitelist(user.clone()).assert_ok();
+    setup.remove_from_second_whitelist(user.clone()).assert_ok();
+    assert_eq!(setup.is_second_whitelisted(user.clone()), false);
+}
