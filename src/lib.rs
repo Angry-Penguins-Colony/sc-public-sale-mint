@@ -8,8 +8,10 @@ pub const ERR_INIT_REDUCED_PRICE_PER_EGG_DIFF: &str =
     "Reduced rice per egg length different from max per wallet";
 pub const ERR_INIT_REDUCED_PRICE_PER_EGG_ZERO: &str = "The reduced price list is empty";
 
+pub mod whitelist;
+
 #[elrond_wasm::derive::contract]
-pub trait PublicSaleMint {
+pub trait PublicSaleMint: whitelist::WhitelistModule {
     #[storage_mapper("max_per_wallet")]
     fn max_per_wallet(&self) -> SingleValueMapper<u64>;
 
