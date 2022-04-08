@@ -59,7 +59,7 @@ pub trait WhitelistModule {
         self.first_whitelist_mapper().require_whitelisted(item);
     }
 
-    #[storage_mapper("whitelistMapper")]
+    #[storage_mapper("first_whitelist_mapper")]
     fn first_whitelist_mapper(&self) -> WhitelistMapper<Self::Api, ManagedAddress>;
 
     // ===
@@ -86,6 +86,6 @@ pub trait WhitelistModule {
         self.second_whitelist_mapper().require_whitelisted(item);
     }
 
-    #[storage_mapper("whitelistMapper")]
+    #[storage_mapper("second_whitelist_mapper")]
     fn second_whitelist_mapper(&self) -> WhitelistMapper<Self::Api, ManagedAddress>;
 }

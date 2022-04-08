@@ -4,8 +4,8 @@ use public_sale_mint::{whitelist::WhitelistModule, *};
 
 pub const WASM_PATH: &'static str = "output/empty.wasm";
 pub const PUBLIC_TIMESTAMP: u64 = 120;
-pub const SECOND_WHITELIST_TIMESTAMP_DELTA: u64 = 30;
-pub const FIRST_WHITELIST_TIMESTAMP_DELTA: u64 = 60;
+pub const SECOND_WHITELIST_TIMESTAMP_DELTA: u64 = 20;
+pub const FIRST_WHITELIST_TIMESTAMP_DELTA: u64 = 40;
 
 pub struct ContractSetup<ContractObjBuilder>
 where
@@ -40,6 +40,20 @@ where
     }
 
     #[allow(dead_code)]
+    pub fn add_to_second_whitelist(&mut self, address: Address) -> TxResult {
+        let tx_result = self.blockchain_wrapper.execute_tx(
+            &self.owner_address,
+            &self.contract_wrapper,
+            &rust_biguint!(0u64),
+            |sc| {
+                sc.add_to_second_whitelist(&ManagedAddress::from_address(&address));
+            },
+        );
+
+        return tx_result;
+    }
+
+    #[allow(dead_code)]
     pub fn is_first_whitelisted(&mut self, address: Address) -> bool {
         let mut output = Option::None;
         self.blockchain_wrapper
@@ -61,20 +75,6 @@ where
             .assert_ok();
 
         return output.unwrap();
-    }
-
-    #[allow(dead_code)]
-    pub fn add_to_second_whitelist(&mut self, address: Address) -> TxResult {
-        let tx_result = self.blockchain_wrapper.execute_tx(
-            &self.owner_address,
-            &self.contract_wrapper,
-            &rust_biguint!(0u64),
-            |sc| {
-                sc.add_to_second_whitelist(&ManagedAddress::from_address(&address));
-            },
-        );
-
-        return tx_result;
     }
 
     #[allow(dead_code)]
@@ -175,6 +175,7 @@ where
         })
         .assert_ok();
 
+    blockchain_wrapper.set_block_timestamp(0);
     blockchain_wrapper.add_mandos_set_account(cf_wrapper.address_ref());
 
     ContractSetup {
