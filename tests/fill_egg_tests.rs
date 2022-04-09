@@ -1,8 +1,8 @@
 mod contract_setup;
 
 use contract_setup::setup_contract;
-use elrond_wasm::{contract_base::ContractBase, types::TokenIdentifier};
-use elrond_wasm_debug::{rust_biguint, DebugApi};
+use elrond_wasm::contract_base::ContractBase;
+use elrond_wasm_debug::rust_biguint;
 use public_sale_mint::PublicSaleMint;
 
 #[test]

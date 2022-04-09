@@ -106,4 +106,15 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
 
         require!(self.token_nonce().get() == nonce, ERR_FILL_BAD_NONCE);
     }
+
+    #[endpoint]
+    #[payable("*")]
+    fn buy(
+        &self,
+        #[payment] _payment: BigUint,
+        #[payment_token] _token: TokenIdentifier,
+        #[payment_nonce] _nonce: u64,
+    ) {
+        panic!("Not implemented");
+    }
 }
