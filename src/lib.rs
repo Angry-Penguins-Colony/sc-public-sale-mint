@@ -18,6 +18,7 @@ pub const ERR_FILL_BAD_NONCE: &str =
 pub const ERR_FILL_BAD_IDENTIFIER: &str =
     "The identifier of the token you are trying to fill is not the one expected";
 pub const ERR_EGLD_BETWEEN_PRICE: &str = "The payment specified doesn't correspond to any price.";
+pub const ERR_TOO_MUCH_EGLD_SENT: &str = "Too much eGLD sent.";
 
 #[elrond_wasm::derive::contract]
 pub trait PublicSaleMint: whitelist::WhitelistModule {
@@ -127,7 +128,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     ) -> u64 {
         let mut spend_amount: BigUint = BigUint::zero();
 
-        for n in already_bought..=self.max_per_wallet().get() {
+        for n in already_bought..=self.max_per_wallet().get() - 1 {
             let price = prices.get((n + 1) as usize);
             spend_amount += price;
 
@@ -138,7 +139,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
             }
         }
 
-        panic!("not implemented");
+        sc_panic!(ERR_TOO_MUCH_EGLD_SENT);
     }
 
     fn get_price_list(&self, address: &ManagedAddress) -> VecMapper<BigUint> {
