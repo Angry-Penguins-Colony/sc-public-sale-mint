@@ -203,8 +203,8 @@ where
                 PUBLIC_TIMESTAMP,
                 SECOND_WHITELIST_TIMESTAMP_DELTA,
                 FIRST_WHITELIST_TIMESTAMP_DELTA,
-                TokenIdentifier::from_esdt_bytes(b"TOKEN"),
-                3,
+                TokenIdentifier::from_esdt_bytes(&EGG_ID),
+                EGG_NONCE,
             );
         })
         .assert_ok();

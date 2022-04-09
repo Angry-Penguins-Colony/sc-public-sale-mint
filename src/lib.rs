@@ -12,6 +12,12 @@ pub const ERR_INIT_SECOND_WL_LESSER_THEN_FIRST: &str =
 
 pub mod whitelist;
 
+pub const ERR_NOT_OWNER: &str = "Endpoint can only be called by owner";
+pub const ERR_FILL_BAD_NONCE: &str =
+    "The nonce you are trying to fill the SC with is not the one expected";
+pub const ERR_FILL_BAD_IDENTIFIER: &str =
+    "The identifier of the token you are trying to fill is not the one expected";
+
 #[elrond_wasm::derive::contract]
 pub trait PublicSaleMint: whitelist::WhitelistModule {
     #[storage_mapper("max_per_wallet")]
@@ -87,10 +93,17 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     #[only_owner]
     fn fill_egg(
         &self,
-        #[payment] payment: BigUint,
+        #[payment] _payment: BigUint,
         #[payment_token] token: TokenIdentifier,
         #[payment_nonce] nonce: u64,
     ) {
         self.blockchain().check_caller_is_owner();
+
+        require!(
+            self.token_identifier().get() == token,
+            ERR_FILL_BAD_IDENTIFIER
+        );
+
+        require!(self.token_nonce().get() == nonce, ERR_FILL_BAD_NONCE);
     }
 }
