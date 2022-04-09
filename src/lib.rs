@@ -17,6 +17,7 @@ pub const ERR_FILL_BAD_NONCE: &str =
     "The nonce you are trying to fill the SC with is not the one expected";
 pub const ERR_FILL_BAD_IDENTIFIER: &str =
     "The identifier of the token you are trying to fill is not the one expected";
+pub const ERR_EGLD_BETWEEN_PRICE: &str = "The payment specified doesn't correspond to any price.";
 
 #[elrond_wasm::derive::contract]
 pub trait PublicSaleMint: whitelist::WhitelistModule {
@@ -24,10 +25,10 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     fn max_per_wallet(&self) -> SingleValueMapper<u64>;
 
     #[storage_mapper("price_per_egg")]
-    fn price_per_egg(&self) -> VecMapper<u64>;
+    fn price_per_egg(&self) -> VecMapper<BigUint>;
 
     #[storage_mapper("reduced_price_per_egg")]
-    fn reduced_price_per_egg(&self) -> VecMapper<u64>;
+    fn reduced_price_per_egg(&self) -> VecMapper<BigUint>;
 
     #[storage_mapper("token_identifier")]
     fn token_identifier(&self) -> SingleValueMapper<TokenIdentifier>;
@@ -39,8 +40,8 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     fn init(
         &self,
         max_per_wallet: u64,
-        price_per_egg: ManagedVec<u64>,
-        reduced_price_per_egg: ManagedVec<u64>,
+        price_per_egg: ManagedVec<BigUint>,
+        reduced_price_per_egg: ManagedVec<BigUint>,
         timestamp_public_sale: u64,
         second_whitelist_delta: u64,
         first_whitelist_delta: u64,
@@ -115,6 +116,36 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         #[payment_token] _token: TokenIdentifier,
         #[payment_nonce] _nonce: u64,
     ) {
-        panic!("Not implemented");
+        panic!("not implemented");
+    }
+
+    fn calculate_buyable_eggs_count(
+        &self,
+        payment_amount: BigUint,
+        already_bought: u64,
+        prices: VecMapper<BigUint>,
+    ) -> u64 {
+        let mut spend_amount: BigUint = BigUint::zero();
+
+        for n in already_bought..=self.max_per_wallet().get() {
+            let price = prices.get((n + 1) as usize);
+            spend_amount += price;
+
+            require!(spend_amount <= payment_amount, ERR_EGLD_BETWEEN_PRICE);
+
+            if spend_amount == payment_amount {
+                return n + 1 - already_bought;
+            }
+        }
+
+        panic!("not implemented");
+    }
+
+    fn get_price_list(&self, address: &ManagedAddress) -> VecMapper<BigUint> {
+        if self.check_contains_second(address) {
+            return self.reduced_price_per_egg();
+        } else {
+            return self.price_per_egg();
+        }
     }
 }

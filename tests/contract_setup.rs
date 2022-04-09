@@ -1,6 +1,7 @@
+use elrond_wasm::api::{BigIntApi, ManagedTypeApi};
 use elrond_wasm::{
     contract_base::ContractBase,
-    types::{Address, ManagedAddress, ManagedVec, TokenIdentifier},
+    types::{Address, BigUint, ManagedAddress, ManagedType, ManagedVec, TokenIdentifier},
 };
 use elrond_wasm_debug::{rust_biguint, testing_framework::*, tx_mock::TxResult, DebugApi};
 use public_sale_mint::{whitelist::WhitelistModule, *};
@@ -32,6 +33,23 @@ impl<ContractObjBuilder> ContractSetup<ContractObjBuilder>
 where
     ContractObjBuilder: 'static + Copy + Fn() -> public_sale_mint::ContractObj<DebugApi>,
 {
+    #[allow(dead_code)]
+    pub fn get_price(&mut self, index: usize) -> BigUint<DebugApi> {
+        let mut output = None;
+
+        self.blockchain_wrapper
+            .execute_query(&self.contract_wrapper, |sc| {
+                output = Some(sc.price_per_egg().get(index + 1));
+
+                assert_eq!(output.is_some(), true, "Cannot get the price of the egg");
+            })
+            .assert_ok();
+
+        assert_eq!(output.is_some(), true, "Cannot get the price of the egg");
+
+        return output.unwrap();
+    }
+
     #[allow(dead_code)]
     pub fn add_to_first_whitelist(&mut self, address: Address) -> TxResult {
         let tx_result = self.blockchain_wrapper.execute_tx(
@@ -138,7 +156,32 @@ where
             self.egg_nonce,
             &rust_biguint!(balance),
             &{},
-        )
+        );
+    }
+
+    #[allow(dead_code)]
+    pub fn fill_eggs(&mut self, balance: u64) {
+        self.set_eggs(&self.owner_address.clone(), balance);
+        self.fill_eggs_from(&self.owner_address.clone(), balance)
+            .assert_ok();
+    }
+
+    #[allow(dead_code)]
+    pub fn buy(&mut self, address: &Address, egld: &num_bigint::BigUint) -> TxResult {
+        return self
+            .blockchain_wrapper
+            .execute_tx(address, &self.contract_wrapper, egld, |sc| {
+                let payment = sc.call_value().payment_as_tuple();
+
+                sc.buy(payment.2, payment.0, payment.1);
+            });
+    }
+
+    #[allow(dead_code)]
+    pub fn get_eggs_balance(&mut self, address: &Address) -> num_bigint::BigUint {
+        return self
+            .blockchain_wrapper
+            .get_esdt_balance(address, &self.egg_id, self.egg_nonce);
     }
 
     #[allow(dead_code)]
@@ -177,7 +220,10 @@ pub fn setup_contract<ContractObjBuilder>(
 where
     ContractObjBuilder: 'static + Copy + Fn() -> public_sale_mint::ContractObj<DebugApi>,
 {
+    DebugApi::dummy();
+
     let rust_zero = rust_biguint!(0u64);
+    let egld_50 = rust_biguint!(50);
     let mut blockchain_wrapper = BlockchainStateWrapper::new();
     let owner_address = blockchain_wrapper.create_user_account(&rust_zero);
     let cf_wrapper = blockchain_wrapper.create_sc_account(
@@ -188,18 +234,30 @@ where
     );
 
     let users = [
-        blockchain_wrapper.create_user_account(&rust_zero),
-        blockchain_wrapper.create_user_account(&rust_zero),
-        blockchain_wrapper.create_user_account(&rust_zero),
-        blockchain_wrapper.create_user_account(&rust_zero),
+        blockchain_wrapper.create_user_account(&egld_50),
+        blockchain_wrapper.create_user_account(&egld_50),
+        blockchain_wrapper.create_user_account(&egld_50),
+        blockchain_wrapper.create_user_account(&egld_50),
     ];
 
     blockchain_wrapper
         .execute_tx(&owner_address, &cf_wrapper, &rust_zero, |sc| {
             sc.init(
                 5,
-                ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64, 5u64]),
-                ManagedVec::from(vec![1u64, 2u64, 3u64, 4u64, 5u64]),
+                ManagedVec::<DebugApi, BigUint<DebugApi>>::from(vec![
+                    big_uint_conv_num(10),
+                    big_uint_conv_num(9),
+                    big_uint_conv_num(8),
+                    big_uint_conv_num(7),
+                    big_uint_conv_num(6),
+                ]),
+                ManagedVec::<DebugApi, BigUint<DebugApi>>::from(vec![
+                    big_uint_conv_num(5),
+                    big_uint_conv_num(4),
+                    big_uint_conv_num(3),
+                    big_uint_conv_num(2),
+                    big_uint_conv_num(1),
+                ]),
                 PUBLIC_TIMESTAMP,
                 SECOND_WHITELIST_TIMESTAMP_DELTA,
                 FIRST_WHITELIST_TIMESTAMP_DELTA,
@@ -223,4 +281,8 @@ where
         egg_id: EGG_ID,
         egg_nonce: EGG_NONCE,
     }
+}
+
+pub fn big_uint_conv_num(value: i64) -> BigUint<DebugApi> {
+    return BigUint::from_raw_handle(DebugApi::managed_type_impl().bi_new(value));
 }
