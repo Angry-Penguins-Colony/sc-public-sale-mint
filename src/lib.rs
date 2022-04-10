@@ -20,6 +20,8 @@ pub const ERR_FILL_BAD_IDENTIFIER: &str =
 pub const ERR_EGLD_BETWEEN_PRICE: &str = "The payment specified doesn't correspond to any price.";
 pub const ERR_TOO_MUCH_EGLD_SENT: &str = "Too much eGLD sent.";
 
+pub const ERR_BUY_NOT_EGLD: &str = "Sorry, the payment is not in eGLD.";
+
 #[elrond_wasm::derive::contract]
 pub trait PublicSaleMint: whitelist::WhitelistModule {
     #[storage_mapper("max_per_wallet")]
@@ -117,9 +119,11 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     fn buy(
         &self,
         #[payment] payment_amount: BigUint,
-        #[payment_token] _token: TokenIdentifier,
+        #[payment_token] token: TokenIdentifier,
         #[payment_nonce] _nonce: u64,
     ) {
+        require!(token.is_egld(), ERR_BUY_NOT_EGLD);
+
         let caller = self.blockchain().get_caller();
         let already_bought = match self.already_bought().get(&caller) {
             Some(bought) => bought,
