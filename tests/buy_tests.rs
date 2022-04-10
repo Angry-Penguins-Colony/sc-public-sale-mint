@@ -82,3 +82,25 @@ fn buy_exceed_price() {
         .buy(user, &rust_biguint!(150u64))
         .assert_user_error(public_sale_mint::ERR_TOO_MUCH_EGLD_SENT);
 }
+
+#[test]
+fn buy_dont_fit_price() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+    let user = &setup.users[0].clone();
+
+    setup.fill_eggs(10u64);
+    setup
+        .buy(user, &rust_biguint!(10u64 + 5u64))
+        .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
+}
+
+#[test]
+fn buy_with_zero() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+    let user = &setup.users[0].clone();
+
+    setup.fill_eggs(10u64);
+    setup
+        .buy(user, &rust_biguint!(0u64))
+        .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
+}
