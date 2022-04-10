@@ -34,6 +34,21 @@ where
     ContractObjBuilder: 'static + Copy + Fn() -> public_sale_mint::ContractObj<DebugApi>,
 {
     #[allow(dead_code)]
+    pub fn get_max_per_wallet(&mut self) -> u64 {
+        let mut output = None;
+
+        self.blockchain_wrapper
+            .execute_query(&self.contract_wrapper, |sc| {
+                output = Some(sc.max_per_wallet().get());
+            })
+            .assert_ok();
+
+        assert_eq!(output.is_some(), true, "Cannot get the price of the egg");
+
+        return output.unwrap();
+    }
+
+    #[allow(dead_code)]
     pub fn get_price(&mut self, index: usize) -> BigUint<DebugApi> {
         let mut output = None;
 

@@ -130,6 +130,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
 
         for n in already_bought..=self.max_per_wallet().get() - 1 {
             let price = prices.get((n + 1) as usize);
+
             spend_amount += price;
 
             require!(spend_amount <= payment_amount, ERR_EGLD_BETWEEN_PRICE);
