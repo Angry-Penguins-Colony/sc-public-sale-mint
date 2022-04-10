@@ -1,8 +1,11 @@
 use elrond_wasm::api::{BigIntApi, ManagedTypeApi};
+use elrond_wasm::elrond_codec::multi_types::MultiValue2;
+use elrond_wasm::types::MultiValueEncoded;
 use elrond_wasm::{
     contract_base::ContractBase,
     types::{Address, BigUint, ManagedAddress, ManagedType, ManagedVec, TokenIdentifier},
 };
+use elrond_wasm_debug::tx_mock::TxContextRef;
 use elrond_wasm_debug::{rust_biguint, testing_framework::*, tx_mock::TxResult, DebugApi};
 use public_sale_mint::{whitelist::WhitelistModule, *};
 
@@ -232,6 +235,22 @@ where
             .assert_ok();
 
         assert_eq!(output.is_some(), true, "Cannot get the buyed amount");
+
+        return output.unwrap();
+    }
+
+    #[allow(dead_code)]
+    pub fn get_all_buyers(
+        &mut self,
+    ) -> MultiValueEncoded<TxContextRef, MultiValue2<ManagedAddress<TxContextRef>, u64>> {
+        let mut output = Option::None;
+        self.blockchain_wrapper
+            .execute_query(&self.contract_wrapper, |sc| {
+                output = Some(sc.get_all_buyers());
+            })
+            .assert_ok();
+
+        assert_eq!(output.is_some(), true, "Cannot get the buyers");
 
         return output.unwrap();
     }

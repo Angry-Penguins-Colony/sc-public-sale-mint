@@ -209,4 +209,16 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
             None => 0,
         }
     }
+
+    #[endpoint]
+    fn get_all_buyers(&self) -> MultiValueEncoded<MultiValue2<ManagedAddress, u64>> {
+        let mut buyers = MultiValueEncoded::new();
+
+        for (address, balance) in self.already_bought().iter() {
+            let value = MultiValue2::from((address, balance));
+            buyers.push(value);
+        }
+
+        return buyers;
+    }
 }
