@@ -240,6 +240,18 @@ where
     }
 
     #[allow(dead_code)]
+    pub fn claim_balance(&mut self, caller: &Address) -> TxResult {
+        return self.blockchain_wrapper.execute_tx(
+            &caller,
+            &self.contract_wrapper,
+            &rust_biguint!(0),
+            |sc| {
+                sc.claim_balance();
+            },
+        );
+    }
+
+    #[allow(dead_code)]
     pub fn get_all_buyers(
         &mut self,
     ) -> MultiValueEncoded<TxContextRef, MultiValue2<ManagedAddress<TxContextRef>, u64>> {
