@@ -101,3 +101,45 @@ fn buy_to_max_wallet_from_zero() {
         })
         .assert_ok();
 }
+
+#[test]
+fn buy_to_max_wallet_from_max_wallet() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    setup
+        .blockchain_wrapper
+        .execute_query(&setup.contract_wrapper, |sc| {
+            let mut price_sum = BigUint::<DebugApi>::zero();
+
+            for price in sc.price_per_egg().iter() {
+                price_sum += price;
+            }
+
+            let count = sc.calculate_buyable_eggs_count(
+                price_sum,
+                sc.max_per_wallet().get(),
+                sc.price_per_egg(),
+            );
+            assert_eq!(count, sc.max_per_wallet().get());
+        })
+        .assert_user_error(public_sale_mint::ERR_TOO_MUCH_EGLD_SENT);
+}
+
+#[test]
+fn buy_one_from_max_wallet() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    setup
+        .blockchain_wrapper
+        .execute_query(&setup.contract_wrapper, |sc| {
+            let price = sc.price_per_egg().get(1);
+
+            let count = sc.calculate_buyable_eggs_count(
+                price,
+                sc.max_per_wallet().get(),
+                sc.price_per_egg(),
+            );
+            assert_eq!(count, sc.max_per_wallet().get());
+        })
+        .assert_user_error(public_sale_mint::ERR_TOO_MUCH_EGLD_SENT);
+}
