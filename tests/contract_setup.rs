@@ -238,7 +238,7 @@ where
     DebugApi::dummy();
 
     let rust_zero = rust_biguint!(0u64);
-    let egld_50 = rust_biguint!(50);
+    let egld_150 = rust_biguint!(150);
     let mut blockchain_wrapper = BlockchainStateWrapper::new();
     let owner_address = blockchain_wrapper.create_user_account(&rust_zero);
     let cf_wrapper = blockchain_wrapper.create_sc_account(
@@ -249,10 +249,10 @@ where
     );
 
     let users = [
-        blockchain_wrapper.create_user_account(&egld_50),
-        blockchain_wrapper.create_user_account(&egld_50),
-        blockchain_wrapper.create_user_account(&egld_50),
-        blockchain_wrapper.create_user_account(&egld_50),
+        blockchain_wrapper.create_user_account(&egld_150),
+        blockchain_wrapper.create_user_account(&egld_150),
+        blockchain_wrapper.create_user_account(&egld_150),
+        blockchain_wrapper.create_user_account(&egld_150),
     ];
 
     blockchain_wrapper
