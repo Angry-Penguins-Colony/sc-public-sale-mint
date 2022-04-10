@@ -18,8 +18,8 @@ enum UserWhitelist {
 }
 
 fn buy_one(
-    whitelist_state: WhitelistState,
-    user_whitelist: UserWhitelist,
+    whitelist_state: &WhitelistState,
+    user_whitelist: &UserWhitelist,
     amount: u64,
     expected_err: &str,
     expected_egg_balance: u64,
@@ -57,41 +57,36 @@ fn buy_one(
 
 #[test]
 fn buy_one_not_whitelisted() {
+    let user_whitelist = &&UserWhitelist::None;
     buy_one(
-        WhitelistState::NotStarted,
-        UserWhitelist::None,
+        &WhitelistState::NotStarted,
+        user_whitelist,
         10u64,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
 
     buy_one(
-        WhitelistState::FirstOpen,
-        UserWhitelist::None,
+        &WhitelistState::FirstOpen,
+        user_whitelist,
         10u64,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
 
     buy_one(
-        WhitelistState::SecondOpen,
-        UserWhitelist::None,
+        &WhitelistState::SecondOpen,
+        user_whitelist,
         10u64,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
 
-    buy_one(
-        WhitelistState::PublicOpen,
-        UserWhitelist::None,
-        10u64,
-        "",
-        1u64,
-    );
+    buy_one(&WhitelistState::PublicOpen, user_whitelist, 10u64, "", 1u64);
 
     buy_one(
-        WhitelistState::Close,
-        UserWhitelist::None,
+        &WhitelistState::Close,
+        user_whitelist,
         10u64,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
@@ -100,42 +95,55 @@ fn buy_one_not_whitelisted() {
 
 #[test]
 fn buy_one_first_whitelisted() {
+    let user_whitelist = &&UserWhitelist::First;
+
     buy_one(
-        WhitelistState::NotStarted,
-        UserWhitelist::First,
+        &WhitelistState::NotStarted,
+        user_whitelist,
         10u64,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
 
+    buy_one(&WhitelistState::FirstOpen, user_whitelist, 10u64, "", 1u64);
+    buy_one(&WhitelistState::SecondOpen, user_whitelist, 10u64, "", 1u64);
+    buy_one(&WhitelistState::PublicOpen, user_whitelist, 10u64, "", 1u64);
+
     buy_one(
-        WhitelistState::FirstOpen,
-        UserWhitelist::First,
+        &WhitelistState::Close,
+        user_whitelist,
         10u64,
-        "",
-        1u64,
+        public_sale_mint::ERR_SALE_CLOSED,
+        0u64,
+    );
+}
+
+#[test]
+fn buy_one_second_whitelisted() {
+    let whitelisted = &UserWhitelist::Second;
+
+    buy_one(
+        &WhitelistState::NotStarted,
+        whitelisted,
+        5u64,
+        public_sale_mint::ERR_SALE_NOT_OPEN,
+        0u64,
     );
 
     buy_one(
-        WhitelistState::SecondOpen,
-        UserWhitelist::First,
-        10u64,
-        "",
-        1u64,
+        &WhitelistState::FirstOpen,
+        whitelisted,
+        5u64,
+        public_sale_mint::ERR_SALE_NOT_OPEN,
+        0u64,
     );
+    buy_one(&WhitelistState::SecondOpen, whitelisted, 5u64, "", 1u64);
+    buy_one(&WhitelistState::PublicOpen, whitelisted, 5u64, "", 1u64);
 
     buy_one(
-        WhitelistState::PublicOpen,
-        UserWhitelist::First,
-        10u64,
-        "",
-        1u64,
-    );
-
-    buy_one(
-        WhitelistState::Close,
-        UserWhitelist::First,
-        10u64,
+        &WhitelistState::Close,
+        whitelisted,
+        5u64,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
     );
