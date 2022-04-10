@@ -26,7 +26,7 @@ fn add_to_second_whitelisted() {
     let mut setup = setup_contract(public_sale_mint::contract_obj);
 
     let user = setup.users[0].clone();
-    setup.add_to_second_whitelist(user.clone()).assert_ok();
+    setup.add_to_second_whitelist(&user.clone()).assert_ok();
 
     setup
         .blockchain_wrapper
@@ -130,7 +130,7 @@ fn remove_from_second_whitelist() {
     let mut setup = setup_contract(public_sale_mint::contract_obj);
 
     let user = setup.users[0].clone();
-    setup.add_to_second_whitelist(user.clone()).assert_ok();
+    setup.add_to_second_whitelist(&user.clone()).assert_ok();
     setup.remove_from_second_whitelist(user.clone()).assert_ok();
     assert_eq!(setup.is_second_whitelisted(user.clone()), false);
 }
@@ -162,7 +162,7 @@ fn remove_second_whitelist_while_not_owner() {
 
     let address = &setup.users[0].clone();
 
-    setup.add_to_second_whitelist(address.clone()).assert_ok();
+    setup.add_to_second_whitelist(&address.clone()).assert_ok();
 
     setup
         .blockchain_wrapper
@@ -186,7 +186,7 @@ fn has_access_in_public_open() {
     let first_whitelisted = setup.users[2].clone();
 
     setup
-        .add_to_second_whitelist(second_whitelisted.clone())
+        .add_to_second_whitelist(&second_whitelisted.clone())
         .assert_ok();
 
     setup
@@ -209,7 +209,7 @@ fn has_access_in_second_whitelisted_open() {
     let first_whitelisted = setup.users[2].clone();
 
     setup
-        .add_to_second_whitelist(second_whitelisted.clone())
+        .add_to_second_whitelist(&second_whitelisted.clone())
         .assert_ok();
 
     setup
@@ -232,7 +232,7 @@ fn has_access_in_first_whitelisted_open() {
     let first_whitelisted = setup.users[2].clone();
 
     setup
-        .add_to_second_whitelist(second_whitelisted.clone())
+        .add_to_second_whitelist(&second_whitelisted.clone())
         .assert_ok();
 
     setup
@@ -255,7 +255,7 @@ fn has_access_in_no_whitelisted_open() {
     let first_whitelisted = setup.users[2].clone();
 
     setup
-        .add_to_second_whitelist(second_whitelisted.clone())
+        .add_to_second_whitelist(&second_whitelisted.clone())
         .assert_ok();
 
     setup

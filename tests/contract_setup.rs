@@ -80,13 +80,13 @@ where
     }
 
     #[allow(dead_code)]
-    pub fn add_to_second_whitelist(&mut self, address: Address) -> TxResult {
+    pub fn add_to_second_whitelist(&mut self, address: &Address) -> TxResult {
         let tx_result = self.blockchain_wrapper.execute_tx(
             &self.owner_address,
             &self.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                sc.add_to_second_whitelist(&ManagedAddress::from_address(&address));
+                sc.add_to_second_whitelist(&ManagedAddress::from_address(address));
             },
         );
 
