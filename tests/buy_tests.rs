@@ -177,3 +177,30 @@ fn buy_with_zero_reduced_price() {
         .buy(user, &rust_biguint!(0u64))
         .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
 }
+
+#[test]
+fn buy_while_no_remaining_sft() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+    let user = &setup.users[0].clone();
+
+    setup.fill_eggs(1u64);
+    setup.buy(user, &rust_biguint!(10u64)).assert_ok();
+
+    setup
+        .buy(user, &rust_biguint!(9u64))
+        .assert_user_error(public_sale_mint::ERR_SOLD_OUT);
+}
+
+#[test]
+fn buy_while_no_remaining_sft_while_reduced() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+    let user = &setup.users[0].clone();
+
+    setup.add_to_second_whitelist(user).assert_ok();
+    setup.fill_eggs(1u64);
+    setup.buy(user, &rust_biguint!(5u64)).assert_ok();
+
+    setup
+        .buy(user, &rust_biguint!(4u64))
+        .assert_user_error(public_sale_mint::ERR_SOLD_OUT);
+}

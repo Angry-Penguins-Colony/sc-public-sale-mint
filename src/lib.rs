@@ -21,6 +21,7 @@ pub const ERR_EGLD_BETWEEN_PRICE: &str = "The payment specified doesn't correspo
 pub const ERR_TOO_MUCH_EGLD_SENT: &str = "Too much eGLD sent.";
 
 pub const ERR_BUY_NOT_EGLD: &str = "Sorry, the payment is not in eGLD.";
+pub const ERR_SOLD_OUT: &str = "Sorry, all the eggs has been sold.";
 
 #[elrond_wasm::derive::contract]
 pub trait PublicSaleMint: whitelist::WhitelistModule {
@@ -123,6 +124,12 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         #[payment_nonce] _nonce: u64,
     ) {
         require!(token.is_egld(), ERR_BUY_NOT_EGLD);
+        require!(
+            self.blockchain()
+                .get_sc_balance(&self.token_identifier().get(), self.token_nonce().get())
+                > 0,
+            ERR_SOLD_OUT
+        );
 
         let caller = self.blockchain().get_caller();
         let already_bought = match self.already_bought().get(&caller) {
