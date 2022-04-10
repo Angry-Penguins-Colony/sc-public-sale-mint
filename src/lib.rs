@@ -113,11 +113,25 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     #[payable("*")]
     fn buy(
         &self,
-        #[payment] _payment: BigUint,
+        #[payment] payment_amount: BigUint,
         #[payment_token] _token: TokenIdentifier,
         #[payment_nonce] _nonce: u64,
     ) {
-        panic!("not implemented");
+        let caller = self.blockchain().get_caller();
+
+        sc_print!("Warning, already bought is not specified. {:x}", 0u64);
+
+        let buyable_count =
+            self.calculate_buyable_eggs_count(payment_amount, 0, self.get_price_list(&caller));
+
+        // send eggs to the caller
+        self.send().direct(
+            &caller,
+            &self.token_identifier().get(),
+            self.token_nonce().get(),
+            &BigUint::from(buyable_count),
+            &[],
+        );
     }
 
     fn calculate_buyable_eggs_count(
