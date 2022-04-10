@@ -24,3 +24,15 @@ fn buy_two_full_price() {
 
     assert_eq!(setup.get_eggs_balance(user), rust_biguint!(2u64));
 }
+
+#[test]
+fn buy_two_then_one() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+    let user = &setup.users[0].clone();
+
+    setup.fill_eggs(10u64);
+    setup.buy(user, &rust_biguint!(10u64 + 9u64)).assert_ok();
+    setup.buy(user, &rust_biguint!(8u64)).assert_ok();
+
+    assert_eq!(setup.get_eggs_balance(user), rust_biguint!(3u64));
+}

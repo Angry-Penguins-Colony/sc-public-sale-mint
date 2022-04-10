@@ -37,6 +37,9 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     #[storage_mapper("token_nonce")]
     fn token_nonce(&self) -> SingleValueMapper<u64>;
 
+    #[storage_mapper("already_bought")]
+    fn already_bought(&self) -> MapMapper<ManagedAddress, u64>;
+
     #[init]
     fn init(
         &self,
@@ -118,11 +121,16 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         #[payment_nonce] _nonce: u64,
     ) {
         let caller = self.blockchain().get_caller();
+        let already_bought = match self.already_bought().get(&caller) {
+            Some(bought) => bought,
+            None => 0,
+        };
 
-        sc_print!("Warning, already bought is not specified. {:x}", 0u64);
-
-        let buyable_count =
-            self.calculate_buyable_eggs_count(payment_amount, 0, self.get_price_list(&caller));
+        let buyable_count = self.calculate_buyable_eggs_count(
+            payment_amount,
+            already_bought,
+            self.get_price_list(&caller),
+        );
 
         // send eggs to the caller
         self.send().direct(
@@ -132,6 +140,9 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
             &BigUint::from(buyable_count),
             &[],
         );
+
+        self.already_bought()
+            .insert(caller, already_bought + buyable_count);
     }
 
     fn calculate_buyable_eggs_count(
