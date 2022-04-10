@@ -53,6 +53,8 @@ fn buy(
         setup.get_eggs_balance(user),
         rust_biguint!(expected_egg_balance)
     );
+
+    assert_eq!(setup.get_buyed_amount(user), expected_egg_balance);
 }
 
 #[test]

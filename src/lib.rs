@@ -143,10 +143,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
             ERR_SOLD_OUT
         );
 
-        let already_bought = match self.already_bought().get(&caller) {
-            Some(bought) => bought,
-            None => 0,
-        };
+        let already_bought = self.get_buyed_amount(&caller);
 
         let buyable_count = self.calculate_buyable_eggs_count(
             payment_amount,
@@ -202,6 +199,14 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
             return self.reduced_price_per_egg();
         } else {
             return self.price_per_egg();
+        }
+    }
+
+    #[endpoint]
+    fn get_buyed_amount(&self, address: &ManagedAddress) -> u64 {
+        match self.already_bought().get(address) {
+            Some(amount) => amount,
+            None => 0,
         }
     }
 }

@@ -223,6 +223,20 @@ where
     }
 
     #[allow(dead_code)]
+    pub fn get_buyed_amount(&mut self, address: &Address) -> u64 {
+        let mut output = Option::None;
+        self.blockchain_wrapper
+            .execute_query(&self.contract_wrapper, |sc| {
+                output = Some(sc.get_buyed_amount(&ManagedAddress::from_address(address)));
+            })
+            .assert_ok();
+
+        assert_eq!(output.is_some(), true, "Cannot get the buyed amount");
+
+        return output.unwrap();
+    }
+
+    #[allow(dead_code)]
     pub fn fill_eggs_from(&mut self, address: &Address, balance_to_send: u64) -> TxResult {
         return self.blockchain_wrapper.execute_esdt_transfer(
             address,

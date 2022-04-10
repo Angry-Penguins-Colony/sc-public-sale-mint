@@ -17,6 +17,7 @@ fn buy_two_then_one() {
     setup.buy(user, &rust_biguint!(8u64)).assert_ok();
 
     assert_eq!(setup.get_eggs_balance(user), rust_biguint!(3u64));
+    assert_eq!(setup.get_buyed_amount(user), 3u64);
 }
 
 #[test]
@@ -32,6 +33,7 @@ fn buy_two_then_one_reduced_price() {
     setup.buy(user, &rust_biguint!(3u64)).assert_ok();
 
     assert_eq!(setup.get_eggs_balance(user), rust_biguint!(3u64));
+    assert_eq!(setup.get_buyed_amount(user), 3u64);
 }
 
 #[test]
@@ -65,7 +67,9 @@ fn buy_with_not_egld() {
                 sc.buy(payment.2, payment.0, payment.1);
             },
         )
-        .assert_user_error(public_sale_mint::ERR_BUY_NOT_EGLD)
+        .assert_user_error(public_sale_mint::ERR_BUY_NOT_EGLD);
+
+    assert_eq!(setup.get_buyed_amount(user), 0);
 }
 
 #[test]
@@ -78,6 +82,8 @@ fn buy_exceed_price() {
     setup
         .buy(user, &rust_biguint!(150u64))
         .assert_user_error(public_sale_mint::ERR_TOO_MUCH_EGLD_SENT);
+
+    assert_eq!(setup.get_buyed_amount(user), 0);
 }
 
 #[test]
@@ -91,6 +97,8 @@ fn buy_exceed_price_while_reduced_price() {
     setup
         .buy(user, &rust_biguint!(150u64))
         .assert_user_error(public_sale_mint::ERR_TOO_MUCH_EGLD_SENT);
+
+    assert_eq!(setup.get_buyed_amount(user), 0);
 }
 
 #[test]
@@ -103,6 +111,7 @@ fn buy_dont_fit_price() {
     setup
         .buy(user, &rust_biguint!(10u64 + 5u64))
         .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
+    assert_eq!(setup.get_buyed_amount(user), 0);
 }
 
 #[test]
@@ -116,6 +125,7 @@ fn buy_dont_fit_price_while_reduced_price() {
     setup
         .buy(user, &rust_biguint!(5u64 + 1u64))
         .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
+    assert_eq!(setup.get_buyed_amount(user), 0);
 }
 
 #[test]
@@ -128,6 +138,7 @@ fn buy_with_zero() {
     setup
         .buy(user, &rust_biguint!(0u64))
         .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
+    assert_eq!(setup.get_buyed_amount(user), 0);
 }
 
 #[test]
@@ -141,6 +152,7 @@ fn buy_with_zero_reduced_price() {
     setup
         .buy(user, &rust_biguint!(0u64))
         .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
+    assert_eq!(setup.get_buyed_amount(user), 0);
 }
 
 #[test]
@@ -155,6 +167,7 @@ fn buy_while_no_remaining_sft() {
     setup
         .buy(user, &rust_biguint!(9u64))
         .assert_user_error(public_sale_mint::ERR_SOLD_OUT);
+    assert_eq!(setup.get_buyed_amount(user), 1);
 }
 
 #[test]
@@ -170,6 +183,7 @@ fn buy_while_no_remaining_sft_while_reduced() {
     setup
         .buy(user, &rust_biguint!(4u64))
         .assert_user_error(public_sale_mint::ERR_SOLD_OUT);
+    assert_eq!(setup.get_buyed_amount(user), 1);
 }
 
 #[test]
@@ -183,6 +197,7 @@ fn buy_with_full_price_while_reduced() {
     setup
         .buy(user, &rust_biguint!(10u64))
         .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
+    assert_eq!(setup.get_buyed_amount(user), 0);
 }
 
 #[test]
@@ -195,6 +210,7 @@ fn buy_with_reduced_price_while_full() {
     setup
         .buy(user, &rust_biguint!(5u64))
         .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
+    assert_eq!(setup.get_buyed_amount(user), 0);
 }
 
 #[test]
@@ -209,4 +225,5 @@ fn buy_while_closed() {
     setup
         .buy(user, &rust_biguint!(10u64))
         .assert_user_error(public_sale_mint::ERR_SALE_CLOSED);
+    assert_eq!(setup.get_buyed_amount(user), 0);
 }
