@@ -10,7 +10,7 @@ fn add_to_first_whitelisted() {
     let mut setup = setup_contract(public_sale_mint::contract_obj);
 
     let user = setup.users[0].clone();
-    setup.add_to_first_whitelist(user.clone()).assert_ok();
+    setup.add_to_first_whitelist(&user.clone()).assert_ok();
 
     setup
         .blockchain_wrapper
@@ -120,7 +120,7 @@ fn remove_first_whitelist() {
     let mut setup = setup_contract(public_sale_mint::contract_obj);
 
     let user = setup.users[0].clone();
-    setup.add_to_first_whitelist(user.clone()).assert_ok();
+    setup.add_to_first_whitelist(&user.clone()).assert_ok();
     setup.remove_from_first_whitelist(user.clone()).assert_ok();
     assert_eq!(setup.is_first_whitelisted(user.clone()), false);
 }
@@ -141,7 +141,7 @@ fn remove_first_whitelist_while_not_owner() {
 
     let address = &setup.users[0].clone();
 
-    setup.add_to_first_whitelist(address.clone()).assert_ok();
+    setup.add_to_first_whitelist(&address.clone()).assert_ok();
 
     setup
         .blockchain_wrapper
@@ -190,7 +190,7 @@ fn has_access_in_public_open() {
         .assert_ok();
 
     setup
-        .add_to_first_whitelist(first_whitelisted.clone())
+        .add_to_first_whitelist(&first_whitelisted.clone())
         .assert_ok();
 
     setup.open_public_sale();
@@ -213,7 +213,7 @@ fn has_access_in_second_whitelisted_open() {
         .assert_ok();
 
     setup
-        .add_to_first_whitelist(first_whitelisted.clone())
+        .add_to_first_whitelist(&first_whitelisted.clone())
         .assert_ok();
 
     setup.open_second_whitelist();
@@ -236,7 +236,7 @@ fn has_access_in_first_whitelisted_open() {
         .assert_ok();
 
     setup
-        .add_to_first_whitelist(first_whitelisted.clone())
+        .add_to_first_whitelist(&first_whitelisted.clone())
         .assert_ok();
 
     setup.open_first_whitelist();
@@ -259,7 +259,7 @@ fn has_access_in_no_whitelisted_open() {
         .assert_ok();
 
     setup
-        .add_to_first_whitelist(first_whitelisted.clone())
+        .add_to_first_whitelist(&first_whitelisted.clone())
         .assert_ok();
 
     assert_eq!(setup.has_access(&unwhitelisted), false);

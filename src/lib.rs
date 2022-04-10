@@ -23,6 +23,7 @@ pub const ERR_TOO_MUCH_EGLD_SENT: &str = "Too much eGLD sent.";
 pub const ERR_BUY_NOT_EGLD: &str = "Sorry, the payment is not in eGLD.";
 pub const ERR_SOLD_OUT: &str = "Sorry, all the eggs has been sold.";
 pub const ERR_SALE_CLOSED: &str = "Sorry, the sale is closed.";
+pub const ERR_SALE_NOT_OPEN: &str = "Sorry, the sale is not open.";
 
 #[elrond_wasm::derive::contract]
 pub trait PublicSaleMint: whitelist::WhitelistModule {
@@ -130,7 +131,10 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         #[payment_token] token: TokenIdentifier,
         #[payment_nonce] _nonce: u64,
     ) {
-        require!(self.is_sale_closed() == false, ERR_SALE_CLOSED);
+        let caller = self.blockchain().get_caller();
+
+        require!(self.is_sale_over() == false, ERR_SALE_CLOSED);
+        require!(self.has_access(&caller) == true, ERR_SALE_NOT_OPEN);
         require!(token.is_egld(), ERR_BUY_NOT_EGLD);
         require!(
             self.blockchain()
@@ -139,7 +143,6 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
             ERR_SOLD_OUT
         );
 
-        let caller = self.blockchain().get_caller();
         let already_bought = match self.already_bought().get(&caller) {
             Some(bought) => bought,
             None => 0,
@@ -187,7 +190,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         sc_panic!(ERR_TOO_MUCH_EGLD_SENT);
     }
 
-    fn is_sale_closed(&self) -> bool {
+    fn is_sale_over(&self) -> bool {
         let now = self.blockchain().get_block_timestamp();
         let close = self.timestamp_sale_closed().get();
 

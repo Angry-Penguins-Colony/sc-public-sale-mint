@@ -1,242 +1,142 @@
 mod contract_setup;
 
 use contract_setup::setup_contract;
-use elrond_wasm::contract_base::ContractBase;
 use elrond_wasm_debug::rust_biguint;
-use public_sale_mint::PublicSaleMint;
 
-#[test]
-fn buy_one_full_price() {
+enum WhitelistState {
+    NotStarted,
+    FirstOpen,
+    SecondOpen,
+    PublicOpen,
+    Close,
+}
+
+enum UserWhitelist {
+    None,
+    First,
+    Second,
+}
+
+fn buy_one(
+    whitelist_state: WhitelistState,
+    user_whitelist: UserWhitelist,
+    amount: u64,
+    expected_err: &str,
+    expected_egg_balance: u64,
+) {
     let mut setup = setup_contract(public_sale_mint::contract_obj);
     let user = &setup.users[0].clone();
 
-    setup.fill_eggs(10u64);
-    setup.buy(user, &rust_biguint!(10u64)).assert_ok();
+    match whitelist_state {
+        WhitelistState::NotStarted => setup.set_sale_as_not_started(),
+        WhitelistState::FirstOpen => setup.open_first_whitelist(),
+        WhitelistState::SecondOpen => setup.open_second_whitelist(),
+        WhitelistState::PublicOpen => setup.open_public_sale(),
+        WhitelistState::Close => setup.close_sale(),
+    }
 
-    assert_eq!(setup.get_eggs_balance(user), rust_biguint!(1u64));
+    match user_whitelist {
+        UserWhitelist::None => (),
+        UserWhitelist::First => setup.add_to_first_whitelist(user).assert_ok(),
+        UserWhitelist::Second => setup.add_to_second_whitelist(user).assert_ok(),
+    }
+
+    setup.fill_eggs(10u64);
+    let result = setup.buy(user, &rust_biguint!(amount));
+
+    match expected_err {
+        "" => result.assert_ok(),
+        _ => result.assert_user_error(expected_err),
+    }
+
+    assert_eq!(
+        setup.get_eggs_balance(user),
+        rust_biguint!(expected_egg_balance)
+    );
 }
 
 #[test]
-fn buy_one_reduced_price() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.add_to_second_whitelist(user).assert_ok();
-    setup.fill_eggs(10u64);
-    setup.buy(user, &rust_biguint!(5u64)).assert_ok();
-
-    assert_eq!(setup.get_eggs_balance(user), rust_biguint!(1u64));
-}
-
-#[test]
-fn buy_two_full_price() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.fill_eggs(10u64);
-    setup.buy(user, &rust_biguint!(10u64 + 9u64)).assert_ok();
-
-    assert_eq!(setup.get_eggs_balance(user), rust_biguint!(2u64));
-}
-
-#[test]
-fn buy_two_reduced_price() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.add_to_second_whitelist(user).assert_ok();
-    setup.fill_eggs(10u64);
-    setup.buy(user, &rust_biguint!(5u64 + 4u64)).assert_ok();
-
-    assert_eq!(setup.get_eggs_balance(user), rust_biguint!(2u64));
-}
-
-#[test]
-fn buy_two_then_one() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.fill_eggs(10u64);
-    setup.buy(user, &rust_biguint!(10u64 + 9u64)).assert_ok();
-    setup.buy(user, &rust_biguint!(8u64)).assert_ok();
-
-    assert_eq!(setup.get_eggs_balance(user), rust_biguint!(3u64));
-}
-
-#[test]
-fn buy_two_then_one_reduced_price() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.add_to_second_whitelist(user).assert_ok();
-    setup.fill_eggs(10u64);
-    setup.buy(user, &rust_biguint!(5u64 + 4u64)).assert_ok();
-    setup.buy(user, &rust_biguint!(3u64)).assert_ok();
-
-    assert_eq!(setup.get_eggs_balance(user), rust_biguint!(3u64));
-}
-
-#[test]
-fn buy_with_not_egld() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    const TOKEN_ID: &[u8] = b"SOME TOKEN";
-    const TOKEN_NONCE: u64 = 5u64;
-
-    setup.blockchain_wrapper.set_nft_balance(
-        &user,
-        TOKEN_ID,
-        TOKEN_NONCE,
-        &rust_biguint!(10u64),
-        &{},
+fn buy_one_not_whitelisted() {
+    buy_one(
+        WhitelistState::NotStarted,
+        UserWhitelist::None,
+        10u64,
+        public_sale_mint::ERR_SALE_NOT_OPEN,
+        0u64,
     );
 
-    setup
-        .blockchain_wrapper
-        .execute_esdt_transfer(
-            &user,
-            &setup.contract_wrapper,
-            TOKEN_ID,
-            TOKEN_NONCE,
-            &rust_biguint!(1u64),
-            |sc| {
-                let payment = sc.call_value().payment_as_tuple();
+    buy_one(
+        WhitelistState::FirstOpen,
+        UserWhitelist::None,
+        10u64,
+        public_sale_mint::ERR_SALE_NOT_OPEN,
+        0u64,
+    );
 
-                sc.buy(payment.2, payment.0, payment.1);
-            },
-        )
-        .assert_user_error(public_sale_mint::ERR_BUY_NOT_EGLD)
+    buy_one(
+        WhitelistState::SecondOpen,
+        UserWhitelist::None,
+        10u64,
+        public_sale_mint::ERR_SALE_NOT_OPEN,
+        0u64,
+    );
+
+    buy_one(
+        WhitelistState::PublicOpen,
+        UserWhitelist::None,
+        10u64,
+        "",
+        1u64,
+    );
+
+    buy_one(
+        WhitelistState::Close,
+        UserWhitelist::None,
+        10u64,
+        public_sale_mint::ERR_SALE_CLOSED,
+        0u64,
+    );
 }
 
 #[test]
-fn buy_exceed_price() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
+fn buy_one_first_whitelisted() {
+    buy_one(
+        WhitelistState::NotStarted,
+        UserWhitelist::First,
+        10u64,
+        public_sale_mint::ERR_SALE_NOT_OPEN,
+        0u64,
+    );
 
-    setup.fill_eggs(10u64);
-    setup
-        .buy(user, &rust_biguint!(150u64))
-        .assert_user_error(public_sale_mint::ERR_TOO_MUCH_EGLD_SENT);
-}
+    buy_one(
+        WhitelistState::FirstOpen,
+        UserWhitelist::First,
+        10u64,
+        "",
+        1u64,
+    );
 
-#[test]
-fn buy_exceed_price_while_reduced_price() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
+    buy_one(
+        WhitelistState::SecondOpen,
+        UserWhitelist::First,
+        10u64,
+        "",
+        1u64,
+    );
 
-    setup.add_to_second_whitelist(user).assert_ok();
-    setup.fill_eggs(10u64);
-    setup
-        .buy(user, &rust_biguint!(150u64))
-        .assert_user_error(public_sale_mint::ERR_TOO_MUCH_EGLD_SENT);
-}
+    buy_one(
+        WhitelistState::PublicOpen,
+        UserWhitelist::First,
+        10u64,
+        "",
+        1u64,
+    );
 
-#[test]
-fn buy_dont_fit_price() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.fill_eggs(10u64);
-    setup
-        .buy(user, &rust_biguint!(10u64 + 5u64))
-        .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
-}
-
-#[test]
-fn buy_dont_fit_price_while_reduced_price() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.add_to_second_whitelist(user).assert_ok();
-    setup.fill_eggs(10u64);
-    setup
-        .buy(user, &rust_biguint!(5u64 + 1u64))
-        .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
-}
-
-#[test]
-fn buy_with_zero() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.fill_eggs(10u64);
-    setup
-        .buy(user, &rust_biguint!(0u64))
-        .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
-}
-
-#[test]
-fn buy_with_zero_reduced_price() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.add_to_second_whitelist(user).assert_ok();
-    setup.fill_eggs(10u64);
-    setup
-        .buy(user, &rust_biguint!(0u64))
-        .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
-}
-
-#[test]
-fn buy_while_no_remaining_sft() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.fill_eggs(1u64);
-    setup.buy(user, &rust_biguint!(10u64)).assert_ok();
-
-    setup
-        .buy(user, &rust_biguint!(9u64))
-        .assert_user_error(public_sale_mint::ERR_SOLD_OUT);
-}
-
-#[test]
-fn buy_while_no_remaining_sft_while_reduced() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.add_to_second_whitelist(user).assert_ok();
-    setup.fill_eggs(1u64);
-    setup.buy(user, &rust_biguint!(5u64)).assert_ok();
-
-    setup
-        .buy(user, &rust_biguint!(4u64))
-        .assert_user_error(public_sale_mint::ERR_SOLD_OUT);
-}
-
-#[test]
-fn buy_with_full_price_while_reduced() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.add_to_second_whitelist(user).assert_ok();
-    setup.fill_eggs(10u64);
-    setup
-        .buy(user, &rust_biguint!(10u64))
-        .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
-}
-
-#[test]
-fn buy_with_reduced_price_while_full() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.fill_eggs(10u64);
-    setup
-        .buy(user, &rust_biguint!(5u64))
-        .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
-}
-
-#[test]
-fn buy_while_closed() {
-    let mut setup = setup_contract(public_sale_mint::contract_obj);
-    let user = &setup.users[0].clone();
-
-    setup.fill_eggs(10u64);
-    setup.close_sale();
-
-    setup
-        .buy(user, &rust_biguint!(10u64))
-        .assert_user_error(public_sale_mint::ERR_SALE_CLOSED);
+    buy_one(
+        WhitelistState::Close,
+        UserWhitelist::First,
+        10u64,
+        public_sale_mint::ERR_SALE_CLOSED,
+        0u64,
+    );
 }

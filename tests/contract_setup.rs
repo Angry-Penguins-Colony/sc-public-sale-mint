@@ -21,6 +21,8 @@ where
     pub blockchain_wrapper: BlockchainStateWrapper,
     pub owner_address: Address,
     pub users: [Address; 4],
+    pub user_first_whitelisted: Address,
+    pub user_second_whitelisted: Address,
     pub contract_wrapper:
         ContractObjWrapper<public_sale_mint::ContractObj<DebugApi>, ContractObjBuilder>,
     pub public_timestamp: u64,
@@ -68,13 +70,13 @@ where
     }
 
     #[allow(dead_code)]
-    pub fn add_to_first_whitelist(&mut self, address: Address) -> TxResult {
+    pub fn add_to_first_whitelist(&mut self, address: &Address) -> TxResult {
         let tx_result = self.blockchain_wrapper.execute_tx(
             &self.owner_address,
             &self.contract_wrapper,
             &rust_biguint!(0u64),
             |sc| {
-                sc.add_to_first_whitelist(&ManagedAddress::from_address(&address));
+                sc.add_to_first_whitelist(&ManagedAddress::from_address(address));
             },
         );
 
@@ -145,6 +147,19 @@ where
         );
 
         return tx_result;
+    }
+    #[allow(dead_code)]
+    pub fn set_sale_as_not_started(&mut self) {
+        let sale_not_started_timestamp = self.first_whitelist_timestamp - 1;
+
+        assert_eq!(
+            &sale_not_started_timestamp >= &0,
+            true,
+            "Cannot set the sale as not started"
+        );
+
+        self.blockchain_wrapper
+            .set_block_timestamp(sale_not_started_timestamp);
     }
 
     #[allow(dead_code)]
@@ -228,7 +243,7 @@ where
         let mut output = Option::None;
         self.blockchain_wrapper
             .execute_query(&self.contract_wrapper, |sc| {
-                output = Some(sc.has_access(ManagedAddress::from_address(&address)));
+                output = Some(sc.has_access(&ManagedAddress::from_address(&address)));
             })
             .assert_ok();
 
@@ -294,7 +309,10 @@ where
     blockchain_wrapper.set_block_timestamp(0);
     blockchain_wrapper.add_mandos_set_account(cf_wrapper.address_ref());
 
-    ContractSetup {
+    let user_first_whitelisted = blockchain_wrapper.create_user_account(&egld_150);
+    let user_second_whitelisted = blockchain_wrapper.create_user_account(&egld_150);
+
+    let mut contract_setup = ContractSetup {
         blockchain_wrapper,
         owner_address: owner_address,
         contract_wrapper: cf_wrapper,
@@ -305,7 +323,18 @@ where
         egg_id: EGG_ID,
         egg_nonce: EGG_NONCE,
         sale_duration: SALE_DURATION,
-    }
+        user_first_whitelisted,
+        user_second_whitelisted,
+    };
+
+    contract_setup
+        .add_to_first_whitelist(&contract_setup.user_first_whitelisted.clone())
+        .assert_ok();
+    contract_setup
+        .add_to_second_whitelist(&contract_setup.user_second_whitelisted.clone())
+        .assert_ok();
+
+    return contract_setup;
 }
 
 pub fn big_uint_conv_num(value: i64) -> BigUint<DebugApi> {

@@ -15,7 +15,7 @@ pub trait WhitelistModule {
     fn timestamp_first_whitelist(&self) -> SingleValueMapper<u64>;
 
     #[endpoint]
-    fn has_access(&self, address: ManagedAddress) -> bool {
+    fn has_access(&self, address: &ManagedAddress) -> bool {
         let now = self.blockchain().get_block_timestamp();
 
         let public_sale_timestamp = self.timestamp_public_sale().get();
