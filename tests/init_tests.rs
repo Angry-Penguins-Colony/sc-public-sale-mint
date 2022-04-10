@@ -18,6 +18,7 @@ fn init() {
             20,
             TokenIdentifier::from_esdt_bytes(b"TOKEN"),
             3,
+            10,
         );
 
         assert_eq!(sc.max_per_wallet().get(), 3);
@@ -37,6 +38,7 @@ fn init() {
             TokenIdentifier::from_esdt_bytes(b"TOKEN")
         );
         assert_eq!(sc.token_nonce().get(), 3);
+        assert_eq!(sc.timestamp_sale_closed().get(), 60);
     })
     .assert_ok();
 }
@@ -53,6 +55,7 @@ fn init_second_wl_lesser_then_first() {
             0,
             TokenIdentifier::from_esdt_bytes(b"TOKEN"),
             3,
+            0,
         );
     })
     .assert_user_error(public_sale_mint::ERR_INIT_SECOND_WL_LESSER_THEN_FIRST);
@@ -70,6 +73,7 @@ fn full_prices_length_different_from_max_per_wallet() {
             0,
             TokenIdentifier::from_esdt_bytes(b"TOKEN"),
             3,
+            0,
         );
     })
     .assert_user_error(public_sale_mint::ERR_INIT_PRICE_PER_EGG_DIFF);
@@ -87,6 +91,7 @@ fn reduced_prices_length_different_from_max_per_wallet() {
             0,
             TokenIdentifier::from_esdt_bytes(b"TOKEN"),
             3,
+            0,
         );
     })
     .assert_user_error(public_sale_mint::ERR_INIT_REDUCED_PRICE_PER_EGG_DIFF);
@@ -104,6 +109,7 @@ fn full_price_equals_0() {
             0,
             TokenIdentifier::from_esdt_bytes(b"TOKEN"),
             3,
+            0,
         );
     })
     .assert_user_error(public_sale_mint::ERR_INIT_PRICE_PER_EGG_ZERO);
@@ -121,6 +127,7 @@ fn reduced_price_equals_0() {
             0,
             TokenIdentifier::from_esdt_bytes(b"TOKEN"),
             3,
+            0,
         );
     })
     .assert_user_error(public_sale_mint::ERR_INIT_REDUCED_PRICE_PER_EGG_ZERO);

@@ -10,6 +10,7 @@ pub const WASM_PATH: &'static str = "output/empty.wasm";
 pub const PUBLIC_TIMESTAMP: u64 = 120;
 pub const SECOND_WHITELIST_TIMESTAMP_DELTA: u64 = 20;
 pub const FIRST_WHITELIST_TIMESTAMP_DELTA: u64 = 40;
+pub const SALE_DURATION: u64 = 140;
 pub const EGG_ID: [u8; 3] = *b"EGG";
 pub const EGG_NONCE: u64 = 1;
 
@@ -27,6 +28,7 @@ where
     pub second_whitelist_timestamp: u64,
     pub egg_id: [u8; 3],
     pub egg_nonce: u64,
+    pub sale_duration: u64,
 }
 
 impl<ContractObjBuilder> ContractSetup<ContractObjBuilder>
@@ -164,6 +166,12 @@ where
     }
 
     #[allow(dead_code)]
+    pub fn close_sale(&mut self) {
+        self.blockchain_wrapper
+            .set_block_timestamp(self.public_timestamp + self.sale_duration);
+    }
+
+    #[allow(dead_code)]
     pub fn set_eggs(&mut self, address: &Address, balance: u64) {
         self.blockchain_wrapper.set_nft_balance(
             address,
@@ -278,6 +286,7 @@ where
                 FIRST_WHITELIST_TIMESTAMP_DELTA,
                 TokenIdentifier::from_esdt_bytes(&EGG_ID),
                 EGG_NONCE,
+                SALE_DURATION,
             );
         })
         .assert_ok();
@@ -295,6 +304,7 @@ where
         second_whitelist_timestamp: PUBLIC_TIMESTAMP - SECOND_WHITELIST_TIMESTAMP_DELTA,
         egg_id: EGG_ID,
         egg_nonce: EGG_NONCE,
+        sale_duration: SALE_DURATION,
     }
 }
 

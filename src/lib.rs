@@ -22,6 +22,7 @@ pub const ERR_TOO_MUCH_EGLD_SENT: &str = "Too much eGLD sent.";
 
 pub const ERR_BUY_NOT_EGLD: &str = "Sorry, the payment is not in eGLD.";
 pub const ERR_SOLD_OUT: &str = "Sorry, all the eggs has been sold.";
+pub const ERR_SALE_CLOSED: &str = "Sorry, the sale is closed.";
 
 #[elrond_wasm::derive::contract]
 pub trait PublicSaleMint: whitelist::WhitelistModule {
@@ -43,6 +44,9 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     #[storage_mapper("already_bought")]
     fn already_bought(&self) -> MapMapper<ManagedAddress, u64>;
 
+    #[storage_mapper("timestamp_sale_closed")]
+    fn timestamp_sale_closed(&self) -> SingleValueMapper<u64>;
+
     #[init]
     fn init(
         &self,
@@ -54,6 +58,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         first_whitelist_delta: u64,
         token: TokenIdentifier,
         token_nonce: u64,
+        sale_duration: u64,
     ) {
         require!(price_per_egg.len() > 0, ERR_INIT_PRICE_PER_EGG_ZERO);
 
@@ -94,6 +99,8 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
             .set(timestamp_public_sale - first_whitelist_delta);
         self.token_identifier().set(token);
         self.token_nonce().set(token_nonce);
+        self.timestamp_sale_closed()
+            .set(timestamp_public_sale + sale_duration);
     }
 
     #[endpoint]
@@ -123,6 +130,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         #[payment_token] token: TokenIdentifier,
         #[payment_nonce] _nonce: u64,
     ) {
+        require!(self.is_sale_closed() == false, ERR_SALE_CLOSED);
         require!(token.is_egld(), ERR_BUY_NOT_EGLD);
         require!(
             self.blockchain()
@@ -177,6 +185,13 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         }
 
         sc_panic!(ERR_TOO_MUCH_EGLD_SENT);
+    }
+
+    fn is_sale_closed(&self) -> bool {
+        let now = self.blockchain().get_block_timestamp();
+        let close = self.timestamp_sale_closed().get();
+
+        return now >= close;
     }
 
     fn get_price_list(&self, address: &ManagedAddress) -> VecMapper<BigUint> {
