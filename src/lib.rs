@@ -241,4 +241,30 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         let owner = self.blockchain().get_owner_address();
         self.send().direct_egld(&owner, &balance, &[]);
     }
+
+    #[only_owner]
+    #[endpoint]
+    fn claim_eggs(&self) {
+        self.blockchain().check_caller_is_owner();
+
+        let balance = self
+            .blockchain()
+            .get_sc_balance(&self.token_identifier().get(), self.token_nonce().get());
+
+        // STEP 2 : require balance > 0
+        require!(
+            balance > 0,
+            "There is nothing to claim. The balance is empty."
+        );
+
+        // STEP 3 : send balance to owner
+        let owner = self.blockchain().get_owner_address();
+        self.send().direct(
+            &owner,
+            &self.token_identifier().get(),
+            self.token_nonce().get(),
+            &balance,
+            &[],
+        );
+    }
 }
