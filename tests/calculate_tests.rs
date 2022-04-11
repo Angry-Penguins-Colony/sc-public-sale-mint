@@ -9,11 +9,10 @@ use public_sale_mint::PublicSaleMint;
 fn buy_one_from_zero() {
     let mut setup = setup_contract(public_sale_mint::contract_obj);
 
-    let price = setup.get_price(0);
-
     setup
         .blockchain_wrapper
         .execute_query(&setup.contract_wrapper, |sc| {
+            let price = sc.price_per_egg().get(1);
             let count = sc.calculate_buyable_eggs_count(price, 0, sc.price_per_egg());
             assert_eq!(count, 1);
         })
@@ -29,10 +28,9 @@ fn buy_two_from_zero() {
     setup
         .blockchain_wrapper
         .execute_query(&setup.contract_wrapper, |sc| {
-            let p1 = sc.price_per_egg().get(1);
             let p2 = sc.price_per_egg().get(2);
 
-            let count = sc.calculate_buyable_eggs_count(p1 + p2, 0, sc.price_per_egg());
+            let count = sc.calculate_buyable_eggs_count(&p2 + &p2, 0, sc.price_per_egg());
             assert_eq!(count, 2);
         })
         .assert_ok();
@@ -45,13 +43,27 @@ fn buy_two_from_one() {
     setup
         .blockchain_wrapper
         .execute_query(&setup.contract_wrapper, |sc| {
-            let p1 = sc.price_per_egg().get(2);
-            let p2 = sc.price_per_egg().get(3);
+            let p3 = sc.price_per_egg().get(3);
 
-            let count = sc.calculate_buyable_eggs_count(p1 + p2, 1, sc.price_per_egg());
+            let count = sc.calculate_buyable_eggs_count(&p3 + &p3, 1, sc.price_per_egg());
             assert_eq!(count, 2);
         })
         .assert_ok();
+}
+
+#[test]
+fn buy_bad_price_from_one() {
+    let mut setup = setup_contract(public_sale_mint::contract_obj);
+
+    setup
+        .blockchain_wrapper
+        .execute_query(&setup.contract_wrapper, |sc| {
+            let p1 = sc.price_per_egg().get(1);
+
+            let count = sc.calculate_buyable_eggs_count(&p1 + &p1, 1, sc.price_per_egg());
+            assert_eq!(count, 2);
+        })
+        .assert_user_error(public_sale_mint::ERR_BAD_AMOUNT_SENT);
 }
 
 #[test]
@@ -66,7 +78,7 @@ fn buy_with_price_not_listed() {
 
             let _ = sc.calculate_buyable_eggs_count(p1 + delta, 1, sc.price_per_egg());
         })
-        .assert_user_error(public_sale_mint::ERR_EGLD_BETWEEN_PRICE);
+        .assert_user_error(public_sale_mint::ERR_BAD_AMOUNT_SENT);
 }
 
 #[test]
@@ -80,7 +92,7 @@ fn send_too_much() {
 
             let _ = sc.calculate_buyable_eggs_count(p1, 1, sc.price_per_egg());
         })
-        .assert_user_error(public_sale_mint::ERR_TOO_MUCH_EGLD_SENT);
+        .assert_user_error(public_sale_mint::ERR_BAD_AMOUNT_SENT);
 }
 
 #[test]
@@ -90,13 +102,13 @@ fn buy_to_max_wallet_from_zero() {
     setup
         .blockchain_wrapper
         .execute_query(&setup.contract_wrapper, |sc| {
-            let mut price_sum = BigUint::<DebugApi>::zero();
+            let price = sc.price_per_egg().get(5);
 
-            for price in sc.price_per_egg().iter() {
-                price_sum += price;
-            }
-
-            let count = sc.calculate_buyable_eggs_count(price_sum, 0, sc.price_per_egg());
+            let count = sc.calculate_buyable_eggs_count(
+                &price + &price + &price + &price + &price,
+                0,
+                sc.price_per_egg(),
+            );
             assert_eq!(count, sc.max_per_wallet().get());
         })
         .assert_ok();
@@ -122,7 +134,7 @@ fn buy_to_max_wallet_from_max_wallet() {
             );
             assert_eq!(count, sc.max_per_wallet().get());
         })
-        .assert_user_error(public_sale_mint::ERR_TOO_MUCH_EGLD_SENT);
+        .assert_user_error(public_sale_mint::ERR_BAD_AMOUNT_SENT);
 }
 
 #[test]
@@ -141,5 +153,5 @@ fn buy_one_from_max_wallet() {
             );
             assert_eq!(count, sc.max_per_wallet().get());
         })
-        .assert_user_error(public_sale_mint::ERR_TOO_MUCH_EGLD_SENT);
+        .assert_user_error(public_sale_mint::ERR_BAD_AMOUNT_SENT);
 }

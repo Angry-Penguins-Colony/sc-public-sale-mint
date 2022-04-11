@@ -19,7 +19,7 @@ fn claim_balance_while_owner() {
 
     setup.open_public_sale();
     setup.fill_eggs(10u64);
-    setup.buy(buyer, &rust_biguint!(10u64 + 9u64)).assert_ok();
+    setup.buy(buyer, &rust_biguint!(9u64 + 9u64)).assert_ok();
 
     setup
         .claim_balance(&setup.owner_address.clone())
@@ -29,6 +29,6 @@ fn claim_balance_while_owner() {
         setup
             .blockchain_wrapper
             .get_egld_balance(&setup.owner_address),
-        rust_biguint!(10u64 + 9u64)
+        rust_biguint!(9u64 + 9u64)
     );
 }

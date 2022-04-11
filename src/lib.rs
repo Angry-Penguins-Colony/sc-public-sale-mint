@@ -8,7 +8,7 @@ pub const ERR_INIT_REDUCED_PRICE_PER_EGG_DIFF: &str =
     "Reduced rice per egg length different from max per wallet";
 pub const ERR_INIT_REDUCED_PRICE_PER_EGG_ZERO: &str = "The reduced price list is empty";
 pub const ERR_INIT_SECOND_WL_LESSER_THEN_FIRST: &str =
-    "The second whitelist must be lesser than the first";
+    "The second whitelist must be lesser or equal than the first";
 
 pub mod whitelist;
 
@@ -17,8 +17,7 @@ pub const ERR_FILL_BAD_NONCE: &str =
     "The nonce you are trying to fill the SC with is not the one expected";
 pub const ERR_FILL_BAD_IDENTIFIER: &str =
     "The identifier of the token you are trying to fill is not the one expected";
-pub const ERR_EGLD_BETWEEN_PRICE: &str = "The payment specified doesn't correspond to any price.";
-pub const ERR_TOO_MUCH_EGLD_SENT: &str = "Too much eGLD sent.";
+pub const ERR_BAD_AMOUNT_SENT: &str = "Unrecognized amount of eGLD sent.";
 
 pub const ERR_BUY_NOT_EGLD: &str = "Sorry, the payment is not in eGLD.";
 pub const ERR_SOLD_OUT: &str = "Sorry, all the eggs has been sold.";
@@ -79,7 +78,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         );
 
         require!(
-            second_whitelist_delta < first_whitelist_delta,
+            second_whitelist_delta <= first_whitelist_delta,
             ERR_INIT_SECOND_WL_LESSER_THEN_FIRST
         );
 
@@ -124,6 +123,13 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     }
 
     #[endpoint]
+    fn get_remaining_nft(&self) -> BigUint {
+        return self
+            .blockchain()
+            .get_sc_balance(&self.token_identifier().get(), self.token_nonce().get());
+    }
+
+    #[endpoint]
     #[payable("*")]
     fn buy(
         &self,
@@ -136,12 +142,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         require!(self.is_sale_over() == false, ERR_SALE_CLOSED);
         require!(self.has_access(&caller) == true, ERR_SALE_NOT_OPEN);
         require!(token.is_egld(), ERR_BUY_NOT_EGLD);
-        require!(
-            self.blockchain()
-                .get_sc_balance(&self.token_identifier().get(), self.token_nonce().get())
-                > 0,
-            ERR_SOLD_OUT
-        );
+        require!(self.get_remaining_nft() > 0, ERR_SOLD_OUT);
 
         let already_bought = self.get_buyed_amount(&caller);
 
@@ -170,21 +171,17 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         already_bought: u64,
         prices: VecMapper<BigUint>,
     ) -> u64 {
-        let mut spend_amount: BigUint = BigUint::zero();
+        let iter = (already_bought + 1)..=self.max_per_wallet().get();
+        for n in iter {
+            let price = prices.get(n as usize);
 
-        for n in already_bought..=self.max_per_wallet().get() - 1 {
-            let price = prices.get((n + 1) as usize);
-
-            spend_amount += price;
-
-            require!(spend_amount <= payment_amount, ERR_EGLD_BETWEEN_PRICE);
-
-            if spend_amount == payment_amount {
-                return n + 1 - already_bought;
+            if &payment_amount % &price == 0u64 && (&payment_amount / &price) == n - already_bought
+            {
+                return (payment_amount / price).to_u64().unwrap();
             }
         }
 
-        sc_panic!(ERR_TOO_MUCH_EGLD_SENT);
+        sc_panic!(ERR_BAD_AMOUNT_SENT);
     }
 
     fn is_sale_over(&self) -> bool {

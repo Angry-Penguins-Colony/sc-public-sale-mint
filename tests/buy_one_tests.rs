@@ -157,7 +157,7 @@ fn buy_two_not_whitelisted() {
     buy(
         &WhitelistState::NotStarted,
         user_whitelist,
-        19u64,
+        18u64,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
@@ -165,7 +165,7 @@ fn buy_two_not_whitelisted() {
     buy(
         &WhitelistState::FirstOpen,
         user_whitelist,
-        19u64,
+        18u64,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
@@ -173,17 +173,17 @@ fn buy_two_not_whitelisted() {
     buy(
         &WhitelistState::SecondOpen,
         user_whitelist,
-        19u64,
+        18u64,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
 
-    buy(&WhitelistState::PublicOpen, user_whitelist, 19u64, "", 2u64);
+    buy(&WhitelistState::PublicOpen, user_whitelist, 18u64, "", 2u64);
 
     buy(
         &WhitelistState::Close,
         user_whitelist,
-        19u64,
+        18u64,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
     );
@@ -196,19 +196,19 @@ fn buy_two_first_whitelisted() {
     buy(
         &WhitelistState::NotStarted,
         user_whitelist,
-        19u64,
+        18u64,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
 
-    buy(&WhitelistState::FirstOpen, user_whitelist, 19u64, "", 2u64);
-    buy(&WhitelistState::SecondOpen, user_whitelist, 19u64, "", 2u64);
-    buy(&WhitelistState::PublicOpen, user_whitelist, 19u64, "", 2u64);
+    buy(&WhitelistState::FirstOpen, user_whitelist, 18u64, "", 2u64);
+    buy(&WhitelistState::SecondOpen, user_whitelist, 18u64, "", 2u64);
+    buy(&WhitelistState::PublicOpen, user_whitelist, 18u64, "", 2u64);
 
     buy(
         &WhitelistState::Close,
         user_whitelist,
-        19u64,
+        18u64,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
     );
@@ -221,7 +221,7 @@ fn buy_two_second_whitelisted() {
     buy(
         &WhitelistState::NotStarted,
         whitelisted,
-        9u64,
+        8u64,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
@@ -229,17 +229,17 @@ fn buy_two_second_whitelisted() {
     buy(
         &WhitelistState::FirstOpen,
         whitelisted,
-        9u64,
+        8u64,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
-    buy(&WhitelistState::SecondOpen, whitelisted, 9u64, "", 2u64);
-    buy(&WhitelistState::PublicOpen, whitelisted, 9u64, "", 2u64);
+    buy(&WhitelistState::SecondOpen, whitelisted, 8u64, "", 2u64);
+    buy(&WhitelistState::PublicOpen, whitelisted, 8u64, "", 2u64);
 
     buy(
         &WhitelistState::Close,
         whitelisted,
-        9u64,
+        8u64,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
     );
