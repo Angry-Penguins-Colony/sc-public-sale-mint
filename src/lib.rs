@@ -122,7 +122,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         require!(self.token_nonce().get() == nonce, ERR_FILL_BAD_NONCE);
     }
 
-    #[endpoint]
+    #[view(getRemainingNft)]
     fn get_remaining_nft(&self) -> BigUint {
         return self
             .blockchain()
@@ -136,6 +136,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         #[payment] payment_amount: BigUint,
         #[payment_token] token: TokenIdentifier,
         #[payment_nonce] _nonce: u64,
+        to_buy: u64,
     ) {
         let caller = self.blockchain().get_caller();
 
@@ -144,12 +145,16 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         require!(token.is_egld(), ERR_BUY_NOT_EGLD);
         require!(self.get_remaining_nft() > 0, ERR_SOLD_OUT);
 
-        let already_bought = self.get_buyed_amount(&caller);
+        let already_bought = self.get_bought_amount(&caller);
 
-        let buyable_count = self.calculate_buyable_eggs_count(
-            payment_amount,
-            already_bought,
-            self.get_price_list(&caller),
+        require!(
+            self.is_price_valid(
+                payment_amount,
+                already_bought,
+                self.get_price_list(&caller),
+                to_buy
+            ) == true,
+            ERR_BAD_AMOUNT_SENT
         );
 
         // send eggs to the caller
@@ -157,31 +162,29 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
             &caller,
             &self.token_identifier().get(),
             self.token_nonce().get(),
-            &BigUint::from(buyable_count),
+            &BigUint::from(to_buy),
             &[],
         );
 
         self.already_bought()
-            .insert(caller, already_bought + buyable_count);
+            .insert(caller, already_bought + to_buy);
     }
 
-    fn calculate_buyable_eggs_count(
+    fn is_price_valid(
         &self,
         payment_amount: BigUint,
         already_bought: u64,
         prices: VecMapper<BigUint>,
-    ) -> u64 {
-        let iter = (already_bought + 1)..=self.max_per_wallet().get();
-        for n in iter {
-            let price = prices.get(n as usize);
-
-            if &payment_amount % &price == 0u64 && (&payment_amount / &price) == n - already_bought
-            {
-                return (payment_amount / price).to_u64().unwrap();
-            }
+        to_buy: u64,
+    ) -> bool {
+        let price_index = (to_buy + already_bought) as usize;
+        if price_index == 0 || price_index > prices.len() {
+            return false;
         }
+        let price = prices.get(price_index);
+        self.print().print_biguint(&price);
 
-        sc_panic!(ERR_BAD_AMOUNT_SENT);
+        return &price * to_buy == payment_amount;
     }
 
     fn is_sale_over(&self) -> bool {
@@ -199,15 +202,15 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
         }
     }
 
-    #[endpoint]
-    fn get_buyed_amount(&self, address: &ManagedAddress) -> u64 {
+    #[view(getBoughtAmount)]
+    fn get_bought_amount(&self, address: &ManagedAddress) -> u64 {
         match self.already_bought().get(address) {
             Some(amount) => amount,
             None => 0,
         }
     }
 
-    #[endpoint]
+    #[view(getAllBuyers)]
     fn get_all_buyers(&self) -> MultiValueEncoded<MultiValue2<ManagedAddress, u64>> {
         let mut buyers = MultiValueEncoded::new();
 

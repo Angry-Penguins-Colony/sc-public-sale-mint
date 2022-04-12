@@ -15,9 +15,9 @@ elrond_wasm_node::wasm_endpoints! {
         claim_balance
         claim_eggs
         fill_egg
-        get_all_buyers
-        get_buyed_amount
-        get_remaining_nft
+        getAllBuyers
+        getBoughtAmount
+        getRemainingNft
         has_access
         remove_from_first_whitelist
         remove_from_second_whitelist

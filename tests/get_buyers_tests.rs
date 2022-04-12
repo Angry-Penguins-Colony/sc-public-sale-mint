@@ -27,7 +27,7 @@ fn get_buyers_should_contains_one_with_one() {
 
     setup.open_public_sale();
     setup.fill_eggs(10u64);
-    setup.buy(user, &rust_biguint!(10u64)).assert_ok();
+    setup.buy(user, &rust_biguint!(10u64), 1).assert_ok();
 
     setup
         .blockchain_wrapper
@@ -54,8 +54,8 @@ fn get_buyers_should_contains_one_with_two() {
 
     setup.open_public_sale();
     setup.fill_eggs(10u64);
-    setup.buy(user, &rust_biguint!(10u64)).assert_ok();
-    setup.buy(user, &rust_biguint!(9u64)).assert_ok();
+    setup.buy(user, &rust_biguint!(10u64), 1).assert_ok();
+    setup.buy(user, &rust_biguint!(9u64), 1).assert_ok();
 
     setup
         .blockchain_wrapper
@@ -83,8 +83,8 @@ fn get_buyers_should_contains_two_users() {
 
     setup.open_public_sale();
     setup.fill_eggs(10u64);
-    setup.buy(user1, &rust_biguint!(10u64)).assert_ok();
-    setup.buy(user2, &rust_biguint!(10u64)).assert_ok();
+    setup.buy(user1, &rust_biguint!(10u64), 1).assert_ok();
+    setup.buy(user2, &rust_biguint!(10u64), 1).assert_ok();
 
     setup
         .blockchain_wrapper

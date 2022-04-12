@@ -208,13 +208,13 @@ where
     }
 
     #[allow(dead_code)]
-    pub fn buy(&mut self, address: &Address, egld: &num_bigint::BigUint) -> TxResult {
+    pub fn buy(&mut self, address: &Address, egld: &num_bigint::BigUint, to_buy: u64) -> TxResult {
         return self
             .blockchain_wrapper
             .execute_tx(address, &self.contract_wrapper, egld, |sc| {
                 let payment = sc.call_value().payment_as_tuple();
 
-                sc.buy(payment.2, payment.0, payment.1);
+                sc.buy(payment.2, payment.0, payment.1, to_buy);
             });
     }
 
@@ -230,7 +230,7 @@ where
         let mut output = Option::None;
         self.blockchain_wrapper
             .execute_query(&self.contract_wrapper, |sc| {
-                output = Some(sc.get_buyed_amount(&ManagedAddress::from_address(address)));
+                output = Some(sc.get_bought_amount(&ManagedAddress::from_address(address)));
             })
             .assert_ok();
 

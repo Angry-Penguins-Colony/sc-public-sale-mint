@@ -1,4 +1,7 @@
 {
     "editor.wordWrapColumn": 20000,
-    "editor.wordWrap": "on"
+    "editor.wordWrap": "on",
+    "workbench.colorCustomizations": {
+        "statusBar.background": "#bb7547"
+    }
 }

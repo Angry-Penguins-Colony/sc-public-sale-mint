@@ -21,6 +21,7 @@ fn buy(
     whitelist_state: &WhitelistState,
     user_whitelist: &UserWhitelist,
     amount: u64,
+    to_buy: u64,
     expected_err: &str,
     expected_egg_balance: u64,
 ) {
@@ -42,7 +43,7 @@ fn buy(
     }
 
     setup.fill_eggs(10u64);
-    let result = setup.buy(user, &rust_biguint!(amount));
+    let result = setup.buy(user, &rust_biguint!(amount), to_buy);
 
     match expected_err {
         "" => result.assert_ok(),
@@ -64,6 +65,7 @@ fn buy_one_not_whitelisted() {
         &WhitelistState::NotStarted,
         user_whitelist,
         10u64,
+        1,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
@@ -72,6 +74,7 @@ fn buy_one_not_whitelisted() {
         &WhitelistState::FirstOpen,
         user_whitelist,
         10u64,
+        1,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
@@ -80,16 +83,25 @@ fn buy_one_not_whitelisted() {
         &WhitelistState::SecondOpen,
         user_whitelist,
         10u64,
+        1,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
 
-    buy(&WhitelistState::PublicOpen, user_whitelist, 10u64, "", 1u64);
+    buy(
+        &WhitelistState::PublicOpen,
+        user_whitelist,
+        10u64,
+        1,
+        "",
+        1u64,
+    );
 
     buy(
         &WhitelistState::Close,
         user_whitelist,
         10u64,
+        1,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
     );
@@ -103,18 +115,41 @@ fn buy_one_first_whitelisted() {
         &WhitelistState::NotStarted,
         user_whitelist,
         10u64,
+        1,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
 
-    buy(&WhitelistState::FirstOpen, user_whitelist, 10u64, "", 1u64);
-    buy(&WhitelistState::SecondOpen, user_whitelist, 10u64, "", 1u64);
-    buy(&WhitelistState::PublicOpen, user_whitelist, 10u64, "", 1u64);
+    buy(
+        &WhitelistState::FirstOpen,
+        user_whitelist,
+        10u64,
+        1,
+        "",
+        1u64,
+    );
+    buy(
+        &WhitelistState::SecondOpen,
+        user_whitelist,
+        10u64,
+        1,
+        "",
+        1u64,
+    );
+    buy(
+        &WhitelistState::PublicOpen,
+        user_whitelist,
+        10u64,
+        1,
+        "",
+        1u64,
+    );
 
     buy(
         &WhitelistState::Close,
         user_whitelist,
         10u64,
+        1,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
     );
@@ -128,6 +163,7 @@ fn buy_one_second_whitelisted() {
         &WhitelistState::NotStarted,
         whitelisted,
         5u64,
+        1,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
@@ -136,16 +172,18 @@ fn buy_one_second_whitelisted() {
         &WhitelistState::FirstOpen,
         whitelisted,
         5u64,
+        1,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
-    buy(&WhitelistState::SecondOpen, whitelisted, 5u64, "", 1u64);
-    buy(&WhitelistState::PublicOpen, whitelisted, 5u64, "", 1u64);
+    buy(&WhitelistState::SecondOpen, whitelisted, 5u64, 1, "", 1u64);
+    buy(&WhitelistState::PublicOpen, whitelisted, 5u64, 1, "", 1u64);
 
     buy(
         &WhitelistState::Close,
         whitelisted,
         5u64,
+        1,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
     );
@@ -158,6 +196,7 @@ fn buy_two_not_whitelisted() {
         &WhitelistState::NotStarted,
         user_whitelist,
         18u64,
+        2,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
@@ -166,6 +205,7 @@ fn buy_two_not_whitelisted() {
         &WhitelistState::FirstOpen,
         user_whitelist,
         18u64,
+        2,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
@@ -174,16 +214,25 @@ fn buy_two_not_whitelisted() {
         &WhitelistState::SecondOpen,
         user_whitelist,
         18u64,
+        2,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
 
-    buy(&WhitelistState::PublicOpen, user_whitelist, 18u64, "", 2u64);
+    buy(
+        &WhitelistState::PublicOpen,
+        user_whitelist,
+        18u64,
+        2,
+        "",
+        2u64,
+    );
 
     buy(
         &WhitelistState::Close,
         user_whitelist,
         18u64,
+        2,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
     );
@@ -197,18 +246,41 @@ fn buy_two_first_whitelisted() {
         &WhitelistState::NotStarted,
         user_whitelist,
         18u64,
+        2,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
 
-    buy(&WhitelistState::FirstOpen, user_whitelist, 18u64, "", 2u64);
-    buy(&WhitelistState::SecondOpen, user_whitelist, 18u64, "", 2u64);
-    buy(&WhitelistState::PublicOpen, user_whitelist, 18u64, "", 2u64);
+    buy(
+        &WhitelistState::FirstOpen,
+        user_whitelist,
+        18u64,
+        2,
+        "",
+        2u64,
+    );
+    buy(
+        &WhitelistState::SecondOpen,
+        user_whitelist,
+        18u64,
+        2,
+        "",
+        2u64,
+    );
+    buy(
+        &WhitelistState::PublicOpen,
+        user_whitelist,
+        18u64,
+        2,
+        "",
+        2u64,
+    );
 
     buy(
         &WhitelistState::Close,
         user_whitelist,
         18u64,
+        2,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
     );
@@ -222,6 +294,7 @@ fn buy_two_second_whitelisted() {
         &WhitelistState::NotStarted,
         whitelisted,
         8u64,
+        2,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
@@ -230,16 +303,18 @@ fn buy_two_second_whitelisted() {
         &WhitelistState::FirstOpen,
         whitelisted,
         8u64,
+        2,
         public_sale_mint::ERR_SALE_NOT_OPEN,
         0u64,
     );
-    buy(&WhitelistState::SecondOpen, whitelisted, 8u64, "", 2u64);
-    buy(&WhitelistState::PublicOpen, whitelisted, 8u64, "", 2u64);
+    buy(&WhitelistState::SecondOpen, whitelisted, 8u64, 2, "", 2u64);
+    buy(&WhitelistState::PublicOpen, whitelisted, 8u64, 2, "", 2u64);
 
     buy(
         &WhitelistState::Close,
         whitelisted,
         8u64,
+        2,
         public_sale_mint::ERR_SALE_CLOSED,
         0u64,
     );
