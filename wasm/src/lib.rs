@@ -23,6 +23,10 @@ elrond_wasm_node::wasm_endpoints! {
         remove_from_second_whitelist
         require_contains_first
         require_contains_second
+        timestamp_first_whitelist
+        timestamp_public_sale
+        timestamp_sale_closed
+        timestamp_second_whitelist
     )
 }
 

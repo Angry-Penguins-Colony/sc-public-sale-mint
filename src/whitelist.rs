@@ -5,12 +5,15 @@ pub const ERR_NOT_OWNER: &str = "Endpoint can only be called by owner";
 
 #[elrond_wasm::module]
 pub trait WhitelistModule {
+    #[view(timestamp_public_sale)]
     #[storage_mapper("timestamp_public_sale")]
     fn timestamp_public_sale(&self) -> SingleValueMapper<u64>;
 
+    #[view(timestamp_second_whitelist)]
     #[storage_mapper("timestamp_second_whitelist")]
     fn timestamp_second_whitelist(&self) -> SingleValueMapper<u64>;
 
+    #[view(timestamp_first_whitelist)]
     #[storage_mapper("timestamp_first_whitelist")]
     fn timestamp_first_whitelist(&self) -> SingleValueMapper<u64>;
 
