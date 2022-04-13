@@ -44,6 +44,7 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     #[storage_mapper("already_bought")]
     fn already_bought(&self) -> MapMapper<ManagedAddress, u64>;
 
+    #[view]
     #[storage_mapper("timestamp_sale_closed")]
     fn timestamp_sale_closed(&self) -> SingleValueMapper<u64>;
 
