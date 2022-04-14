@@ -26,12 +26,15 @@ pub const ERR_SALE_NOT_OPEN: &str = "Sorry, the sale is not open.";
 
 #[elrond_wasm::derive::contract]
 pub trait PublicSaleMint: whitelist::WhitelistModule {
+    #[view]
     #[storage_mapper("max_per_wallet")]
     fn max_per_wallet(&self) -> SingleValueMapper<u64>;
 
+    #[view]
     #[storage_mapper("price_per_egg")]
     fn price_per_egg(&self) -> VecMapper<BigUint>;
 
+    #[view]
     #[storage_mapper("reduced_price_per_egg")]
     fn reduced_price_per_egg(&self) -> VecMapper<BigUint>;
 

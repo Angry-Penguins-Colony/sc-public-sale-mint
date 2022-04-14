@@ -19,6 +19,9 @@ elrond_wasm_node::wasm_endpoints! {
         getBoughtAmount
         getRemainingNft
         has_access
+        max_per_wallet
+        price_per_egg
+        reduced_price_per_egg
         remove_from_first_whitelist
         remove_from_second_whitelist
         require_contains_first
