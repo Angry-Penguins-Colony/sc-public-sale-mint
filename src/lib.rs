@@ -144,8 +144,10 @@ pub trait PublicSaleMint: whitelist::WhitelistModule {
     ) {
         let caller = self.blockchain().get_caller();
 
-        require!(self.is_sale_over() == false, ERR_SALE_CLOSED);
-        require!(self.has_access(&caller) == true, ERR_SALE_NOT_OPEN);
+        if caller != self.blockchain().get_owner_address() {
+            require!(self.is_sale_over() == false, ERR_SALE_CLOSED);
+            require!(self.has_access(&caller) == true, ERR_SALE_NOT_OPEN);
+        }
         require!(token.is_egld(), ERR_BUY_NOT_EGLD);
         require!(self.get_remaining_nft() > 0, ERR_SOLD_OUT);
 
